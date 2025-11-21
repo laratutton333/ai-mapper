@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Earned+Owned AI Mapper</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__content">
+        <p class="eyebrow">Earned + Owned Intelligence</p>
+        <h1>Optimize your content for both Google and ChatGPT.</h1>
+        <p class="subtitle">
+          Search is changing. Earned+Owned AI Mapper measures SEO and GEO performance for any press release or owned content page,
+          highlights the gap, and tells you exactly what to fix.
+        </p>
+        <div class="hero__meta">
+          <span>Version 3.0 · November 2025</span>
+          <span>Owner: Lara Tutton</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel input-panel">
+        <h2>1. Provide Content</h2>
+        <p class="panel__intro">Choose an input method, add the content, and optionally set the content type + industry for benchmarking.</p>
+
+        <div class="field-group">
+          <label class="field-label">Input Method</label>
+          <div class="chip-group" data-field="input-type">
+            <button class="chip chip--active" data-value="url">URL</button>
+            <button class="chip" data-value="html">HTML</button>
+            <button class="chip" data-value="text">Text</button>
+          </div>
+        </div>
+
+        <div class="field-group" id="url-field">
+          <label for="urlInput">Content URL</label>
+          <input type="url" id="urlInput" placeholder="https://example.com/press-release" />
+          <p class="helper-text">Requires backend proxy for full analysis. HTTPS URLs score higher for Technical SEO.</p>
+        </div>
+
+        <div class="field-group hidden" id="html-field">
+          <label for="htmlInput">Paste HTML</label>
+          <textarea id="htmlInput" rows="8" placeholder="Paste the full HTML source code here"></textarea>
+          <p class="helper-text">Includes schema + metadata checks. Ideal for QA before publishing.</p>
+        </div>
+
+        <div class="field-group hidden" id="text-field">
+          <label for="textInput">Plain Text</label>
+          <textarea id="textInput" rows="8" placeholder="Paste the draft content here"></textarea>
+          <p class="helper-text">Focuses on content quality + GEO factors. Technical SEO pillars use baseline estimations.</p>
+        </div>
+
+        <div class="field-inline">
+          <div class="field-group">
+            <label for="contentType">Content Type</label>
+            <select id="contentType">
+              <option value="pressRelease">Press Release</option>
+              <option value="blogArticle">Blog Article</option>
+              <option value="productPage">Product / Service Page</option>
+              <option value="landingPage">Landing / Campaign Page</option>
+              <option value="newsArticle">News / Editorial</option>
+              <option value="howTo">How-To Guide / Tutorial</option>
+            </select>
+            <p class="helper-text">Adjusts GEO weighting + recommendations.</p>
+          </div>
+
+          <div class="field-group">
+            <label for="industrySelect">Industry Benchmark</label>
+            <select id="industrySelect">
+              <option value="technology">Technology</option>
+              <option value="financial">Financial Services</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="retail">Retail &amp; E-commerce</option>
+              <option value="manufacturing">Manufacturing</option>
+              <option value="media">Media &amp; Publishing</option>
+              <option value="professional">Professional Services</option>
+              <option value="hospitality">Hospitality &amp; Travel</option>
+              <option value="education">Education</option>
+              <option value="nonProfit">Non-Profit</option>
+            </select>
+            <p class="helper-text">Compares your dual scores to industry averages.</p>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Scoring Mode</label>
+          <div class="chip-group" data-field="mode-toggle">
+            <button class="chip chip--active" data-value="dual">Dual Mode</button>
+            <button class="chip" data-value="seo">SEO Only</button>
+            <button class="chip" data-value="geo">GEO Only</button>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="analyzeBtn" class="cta">Run AI Mapper Analysis</button>
+          <button id="resetBtn" class="ghost">Reset</button>
+        </div>
+        <p class="helper-text small">Average runtime: 3–4 seconds. Backend URL fetch required for production URLs.</p>
+      </section>
+
+      <section class="panel results-panel">
+        <div class="results-header">
+          <div>
+            <h2>2. Dual-Score Results</h2>
+            <p class="panel__intro">View SEO + GEO performance, pillar breakdowns, gap analysis, benchmarks, and actionable recommendations.</p>
+          </div>
+          <button id="exportBtn" class="ghost ghost--icon">
+            <span>Export HTML Report</span>
+            <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+
+        <div class="scores-grid">
+          <article class="score-card" id="seoScoreCard">
+            <p class="score-card__eyebrow">🔍 SEO Score</p>
+            <p class="score-card__value" id="seoScore">--</p>
+            <p class="score-card__desc">Technical + On-Page + Content Quality</p>
+          </article>
+          <article class="score-card" id="geoScoreCard">
+            <p class="score-card__eyebrow">🧠 GEO Score</p>
+            <p class="score-card__value" id="geoScore">--</p>
+            <p class="score-card__desc">LLM Comprehension + Prompt Alignment + AI Discovery</p>
+          </article>
+          <article class="score-card dual">
+            <p class="score-card__eyebrow">📊 Gap Analysis</p>
+            <p class="score-card__value" id="gapScore">--</p>
+            <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
+          </article>
+        </div>
+
+        <div class="pillars" id="pillarBreakdown">
+          <!-- Pillar cards injected via JS -->
+        </div>
+
+        <div class="benchmarks" id="benchmarkComparison">
+          <h3>Industry Benchmark</h3>
+          <div class="benchmark-cards">
+            <div class="benchmark-card">
+              <p>SEO vs Avg</p>
+              <p class="benchmark-value" id="seoBenchmark"></p>
+              <p class="benchmark-label" id="seoBenchmarkLabel"></p>
+            </div>
+            <div class="benchmark-card">
+              <p>GEO vs Avg</p>
+              <p class="benchmark-value" id="geoBenchmark"></p>
+              <p class="benchmark-label" id="geoBenchmarkLabel"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="recommendations">
+          <div class="recommendations__header">
+            <h3>Recommendations</h3>
+            <div class="chip-group" data-field="recommendation-view">
+              <button class="chip chip--active" data-value="combined">Combined</button>
+              <button class="chip" data-value="seo">SEO</button>
+              <button class="chip" data-value="geo">GEO</button>
+            </div>
+          </div>
+          <ul class="recommendation-list" id="recommendationList"></ul>
+        </div>
+
+        <div class="type-specific" id="typeSpecificFindings">
+          <h3>Content Type-Specific Findings</h3>
+          <ul></ul>
+        </div>
+
+        <div class="analysis-log">
+          <h3>Analysis Snapshot</h3>
+          <pre id="analysisSnapshot">Run an analysis to view real metrics, schema detection, tone insights, and more.</pre>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Earned+Owned AI Mapper · Dual-mode SEO + GEO analysis · MVP v3.0</p>
+    </footer>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
