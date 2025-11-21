@@ -6,7 +6,7 @@ import { buildRecommendations, getTypeSpecificFindings } from './analysis/recomm
 const API_BASE =
   window.AI_MAPPER_API_URL ||
   (window.location.hostname.includes('vercel.app')
-    ? 'https://REPLACE-WITH-BACKEND.vercel.app'
+    ? 'https://ai-mapper-backend.vercel.app'
     : '');
 
 const state = {
