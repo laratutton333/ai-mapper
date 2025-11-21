@@ -29,11 +29,23 @@ body {
 .hero {
   background: var(--gradient);
   color: #fff;
-  padding: 3rem min(5vw, 4rem);
+  padding: 3.5rem min(5vw, 4rem) 6rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 55%);
+  pointer-events: none;
 }
 
 .hero__content {
   max-width: 800px;
+  position: relative;
+  z-index: 1;
 }
 
 .eyebrow {
@@ -66,8 +78,10 @@ body {
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   gap: 1.5rem;
   max-width: 1200px;
-  margin: -4rem auto 2rem;
+  margin: -2.5rem auto 2rem;
   padding: 0 1rem 2rem;
+  position: relative;
+  z-index: 2;
 }
 
 .panel {
@@ -386,7 +400,7 @@ textarea {
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
-    margin-top: -2rem;
+    margin-top: -1.25rem;
   }
 
   .panel {
