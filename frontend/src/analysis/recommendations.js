@@ -78,7 +78,7 @@ const GEO_RULES = [
     id: 'conversationalTone',
     text: 'Infuse more conversational markers (“you”, “we”, natural questions) for GEO tone.',
     priority: 'Medium',
-    condition: (metrics) => metrics.conversationalMarkers < 10,
+    condition: (metrics, ctx) => ctx.contentType !== 'pressRelease' && metrics.conversationalMarkers < 10,
   },
   {
     id: 'quotable',
@@ -108,7 +108,7 @@ const GEO_RULES = [
     id: 'authority',
     text: 'Layer in proprietary data or POV to strengthen topical authority signals.',
     priority: 'High',
-    condition: (metrics) => metrics.topicalAuthorityScore < 70,
+    condition: (metrics) => metrics.topicalAuthorityScore < 70 && !metrics.hasProprietaryData,
   },
 ];
 
@@ -176,6 +176,14 @@ export function buildRecommendations(metrics, ctx) {
   };
 }
 
-export function getTypeSpecificFindings(contentType) {
-  return TYPE_SPECIFIC[contentType] ?? [];
+export function getTypeSpecificFindings(contentType, metrics = {}) {
+  const base = TYPE_SPECIFIC[contentType] ?? [];
+  if (contentType === 'pressRelease') {
+    return base.filter((tip) => {
+      if (tip.startsWith('Host the release') && metrics.likelyOwnedDomain) return false;
+      if (tip.includes('proprietary') && metrics.hasProprietaryData) return false;
+      return true;
+    });
+  }
+  return base;
 }
