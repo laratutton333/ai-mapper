@@ -6,19 +6,21 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
   .map((value) => value.trim());
 
-const server = http.createServer(async (req, res) => {
+export default async function handler(req, res) {
   handleCors(req, res);
   if (req.method === 'OPTIONS') {
-    res.writeHead(204);
+    res.statusCode = 204;
     return res.end();
   }
 
-  if (req.method === 'GET' && req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ status: 'ok', timestamp: Date.now() }));
+  const requestUrl = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
+  const pathname = requestUrl.pathname;
+
+  if (req.method === 'GET' && pathname.endsWith('/health')) {
+    return sendJson(res, 200, { status: 'ok', timestamp: Date.now() });
   }
 
-  if (req.method === 'POST' && req.url === '/api/analyze') {
+  if (req.method === 'POST' && pathname.endsWith('/api/analyze')) {
     try {
       const body = await readJsonBody(req);
       if (!body?.url) {
@@ -32,13 +34,15 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Not found' }));
-});
+  return sendJson(res, 404, { error: 'Not found' });
+}
 
-server.listen(PORT, () => {
-  console.log(`AI Mapper backend listening on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  const server = http.createServer(handler);
+  server.listen(PORT, () => {
+    console.log(`AI Mapper backend listening on http://localhost:${PORT}`);
+  });
+}
 
 function handleCors(req, res) {
   const origin = req.headers.origin ?? '*';
@@ -98,6 +102,7 @@ function normalizeUrl(value) {
 }
 
 function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(payload));
 }
