@@ -1,6 +1,14 @@
 import { INDUSTRY_BENCHMARKS, summarizeBenchmark } from './analysis/benchmarks.js';
 import { buildRecommendations, getTypeSpecificFindings } from './analysis/recommendations.js';
 
+// Prefer explicit global override (set window.AI_MAPPER_API_URL before loading this script)
+// otherwise fall back to the deployed backend URL when running on Vercel or relative path locally.
+const API_BASE =
+  window.AI_MAPPER_API_URL ||
+  (window.location.hostname.includes('vercel.app')
+    ? 'https://REPLACE-WITH-BACKEND.vercel.app'
+    : '');
+
 const state = {
   inputType: 'url',
   mode: 'dual',
@@ -130,7 +138,7 @@ async function fetchUrlContent(url) {
   const body = JSON.stringify({ url });
   const headers = { 'Content-Type': 'application/json' };
   try {
-    const response = await fetch('/api/analyze', {
+    const response = await fetch(`${API_BASE}/api/analyze`, {
       method: 'POST',
       headers,
       body,
