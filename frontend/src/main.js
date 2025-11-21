@@ -165,12 +165,16 @@ function analyzeContent({ html, text, inputType, url, contentType, industry }) {
   const textStats = computeTextStats(text);
   const structural = analyzeStructure(html, inputType, url);
   const metrics = { ...textStats, ...structural };
+  metrics.hasProprietaryData =
+    metrics.hasDataTable ||
+    metrics.factsPer100 >= 8 ||
+    metrics.proprietarySignalScore >= 5;
 
   const seo = scoreSEO(metrics, { inputType });
   const geo = scoreGEO(metrics, { contentType });
 
   const recommendations = buildRecommendations(metrics, { contentType });
-  const typeFindings = getTypeSpecificFindings(contentType);
+  const typeFindings = getTypeSpecificFindings(contentType, metrics);
 
   const snapshot = buildSnapshot(metrics, {
     inputType,
@@ -215,6 +219,7 @@ function computeTextStats(text = '') {
   const topicalAuthorityScore = scoreTopicalAuthority(cleanText);
   const parserAccessibilityScore = scoreParserAccessibility(cleanText);
   const attributionCount = countAttributionStatements(cleanText);
+  const proprietarySignalScore = scoreProprietarySignals(cleanText);
 
   return {
     text: cleanText,
@@ -235,6 +240,7 @@ function computeTextStats(text = '') {
     topicalAuthorityScore,
     parserAccessibilityScore,
     attributionCount,
+    proprietarySignalScore,
   };
 }
 
@@ -253,6 +259,9 @@ function analyzeStructure(html = '', inputType, url = '') {
       listCoverage: 0,
       hasFaqSchema: false,
       hasProductSchema: false,
+      hasDataTable: false,
+      dataTableCount: 0,
+      likelyOwnedDomain: inferOwnedDomain(url),
     };
   }
 
@@ -274,6 +283,7 @@ function analyzeStructure(html = '', inputType, url = '') {
   const keywordInIntro = dominantKeyword ? intro.includes(dominantKeyword) : true;
 
   const pageSpeedEstimate = Math.max(55, 95 - imageCount * 3 - (doc.querySelectorAll('script').length * 2));
+  const dataTableCount = doc.querySelectorAll('table').length;
 
   return {
     schemaTypes,
@@ -289,7 +299,31 @@ function analyzeStructure(html = '', inputType, url = '') {
     dominantKeyword,
     hasFaqSchema: schemaTypes.includes('FAQPage'),
     hasProductSchema: schemaTypes.includes('Product'),
+    hasDataTable: dataTableCount > 0,
+    dataTableCount,
+    likelyOwnedDomain: inferOwnedDomain(url, doc),
   };
+}
+
+function inferOwnedDomain(url = '', doc) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    const path = parsed.pathname.toLowerCase();
+    const newsroomHints = ['news', 'press', 'media', 'newsroom', 'mediaroom', 'investor'];
+    if (newsroomHints.some((hint) => hostname.includes(hint) || path.includes(hint))) {
+      return true;
+    }
+    const siteName = doc?.querySelector('meta[property="og:site_name"]')?.getAttribute('content') ?? '';
+    if (siteName) {
+      const sanitized = siteName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (sanitized && hostname.includes(sanitized)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /* SCORING ------------------------------------------------------------------ */
@@ -712,6 +746,13 @@ function countAttributionStatements(text) {
   const attributionVerbs = (text.match(/\b(said|according to|stated|noted|reports|announced)\b/gi) ?? []).length;
   const quotes = (text.match(/["“”]/g) ?? []).length / 2;
   return Math.round(attributionVerbs + quotes);
+}
+
+function scoreProprietarySignals(text) {
+  const currencyMatches = text.match(/[$€£]\s?\d[\d,\.]*|\bUSD\b|\bCAD\b|\bC\$|\bTSX\b/gi) ?? [];
+  const percentMatches = text.match(/\b\d+(?:\.\d+)?%/g) ?? [];
+  const dataKeywords = text.match(/\b(proprietary|benchmark|distribution|ETF|index|internal)\b/gi) ?? [];
+  return currencyMatches.length + percentMatches.length + dataKeywords.length;
 }
 
 function clamp(value, min = 0, max = 100) {
