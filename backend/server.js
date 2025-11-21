@@ -1,7 +1,5 @@
-import http from 'node:http';
 import { URL } from 'node:url';
 
-const PORT = process.env.PORT || 3001;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
   .map((value) => value.trim());
@@ -35,13 +33,6 @@ export default async function handler(req, res) {
   }
 
   return sendJson(res, 404, { error: 'Not found' });
-}
-
-if (!process.env.VERCEL) {
-  const server = http.createServer(handler);
-  server.listen(PORT, () => {
-    console.log(`AI Mapper backend listening on http://localhost:${PORT}`);
-  });
 }
 
 function handleCors(req, res) {
