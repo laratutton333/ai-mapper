@@ -1,5 +1,10 @@
 import { URL } from 'node:url';
 
+const usageTracker = new Map();
+const FREE_ANALYSIS_LIMIT = Number(process.env.FREE_ANALYSIS_LIMIT ?? 1);
+const SUBSCRIPTION_TOKEN = process.env.SUBSCRIPTION_TOKEN ?? '';
+const USAGE_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
   .map((value) => value.trim());
@@ -24,8 +29,19 @@ export default async function handler(req, res) {
       if (!body?.url) {
         return sendJson(res, 400, { error: 'Missing URL in request body.' });
       }
+      const clientId = getClientId(req);
+      const subscribed = isSubscribed(req, body);
+      if (!subscribed && isQuotaExceeded(clientId)) {
+        return sendJson(res, 402, {
+          error: 'subscription_required',
+          message: 'Free analysis limit reached. Subscribe to continue.',
+        });
+      }
       const html = await fetchHtml(body.url);
       const pageSpeed = await fetchPageSpeed(body.url);
+      if (!subscribed) {
+        recordUsage(clientId);
+      }
       return sendJson(res, 200, { html, pageSpeed });
     } catch (error) {
       console.error('Analyze error', error);
@@ -126,4 +142,43 @@ function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(payload));
+}
+
+function getClientId(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket?.remoteAddress ?? 'unknown';
+}
+
+function isSubscribed(req, body) {
+  if (!SUBSCRIPTION_TOKEN) return false;
+  const headerToken = req.headers['x-subscription-token'];
+  if (headerToken && headerToken === SUBSCRIPTION_TOKEN) return true;
+  if (body?.subscriptionToken && body.subscriptionToken === SUBSCRIPTION_TOKEN) return true;
+  return false;
+}
+
+function isQuotaExceeded(clientId) {
+  if (FREE_ANALYSIS_LIMIT <= 0) return false;
+  const entry = usageTracker.get(clientId);
+  if (!entry) return false;
+  if (Date.now() - entry.timestamp > USAGE_WINDOW_MS) {
+    usageTracker.delete(clientId);
+    return false;
+  }
+  return entry.count >= FREE_ANALYSIS_LIMIT;
+}
+
+function recordUsage(clientId) {
+  if (!clientId) return;
+  const now = Date.now();
+  const entry = usageTracker.get(clientId);
+  if (!entry || now - entry.timestamp > USAGE_WINDOW_MS) {
+    usageTracker.set(clientId, { count: 1, timestamp: now });
+  } else {
+    entry.count += 1;
+    entry.timestamp = now;
+  }
 }
