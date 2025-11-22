@@ -97,9 +97,12 @@ async function handleAnalyze() {
 
   try {
     setAnalysisState(true);
+    let pageSpeed = null;
     if (ctx.inputType === 'url') {
       if (!ctx.url) throw new Error('Please provide a URL to analyze.');
-      html = await fetchUrlContent(ctx.url);
+      const fetched = await fetchUrlContent(ctx.url);
+      html = fetched.html;
+      pageSpeed = fetched.pageSpeed ?? null;
       if (!html) throw new Error('Backend fetch failed. Provide HTML or text input instead.');
       text = htmlToText(html);
     } else if (ctx.inputType === 'html') {
@@ -115,6 +118,7 @@ async function handleAnalyze() {
     const result = analyzeContent({
       html,
       text,
+      pageSpeed,
       ...ctx,
     });
 
@@ -147,7 +151,7 @@ async function fetchUrlContent(url) {
       throw new Error('Backend server unavailable or returned an error.');
     }
     const data = await response.json();
-    return data.html ?? '';
+    return { html: data.html ?? '', pageSpeed: data.pageSpeed ?? null };
   } catch (error) {
     // Fallback direct fetch (may fail due to CORS)
     try {
@@ -161,12 +165,16 @@ async function fetchUrlContent(url) {
   }
 }
 
-function analyzeContent({ html, text, inputType, url, contentType, industry }) {
+function analyzeContent({ html, text, inputType, url, contentType, industry, pageSpeed }) {
   const textStats = computeTextStats(text);
   const structural = analyzeStructure(html, inputType, url);
   const metrics = { ...textStats, ...structural };
   if (metrics.hasDataTable) {
     metrics.topicalAuthorityScore = Math.min(100, metrics.topicalAuthorityScore + 10);
+  }
+  if (pageSpeed?.performanceScore) {
+    metrics.pageSpeedEstimate = Math.round(pageSpeed.performanceScore * 100);
+    metrics.pageSpeedDetails = pageSpeed;
   }
   metrics.hasProprietaryData =
     metrics.hasDataTable ||
@@ -574,10 +582,23 @@ function updateBenchmarks(result) {
 
 function buildSnapshot(metrics, meta) {
   const schemaInfo = meta.schema?.length ? meta.schema.join(', ') : 'None detected';
+  const speedLine = metrics.pageSpeedDetails
+    ? `PageSpeed score: ${Math.round((metrics.pageSpeedDetails.performanceScore ?? 0) * 100)} · FCP: ${
+        metrics.pageSpeedDetails.firstContentfulPaint
+          ? (metrics.pageSpeedDetails.firstContentfulPaint / 1000).toFixed(1)
+          : 'n/a'
+      }s · LCP: ${
+        metrics.pageSpeedDetails.largestContentfulPaint
+          ? (metrics.pageSpeedDetails.largestContentfulPaint / 1000).toFixed(1)
+          : 'n/a'
+      }s`
+    : null;
   return `Input: ${meta.inputType.toUpperCase()}${meta.url ? ` (${meta.url})` : ''}
 Schema: ${schemaInfo}
 Readability: ${meta.readability.toFixed(1)}
-Sentences: ${metrics.sentenceCount}, Entities: ${metrics.entityDefinitions}, Q&A: ${metrics.qaCount}`;
+Sentences: ${metrics.sentenceCount}, Entities: ${metrics.entityDefinitions}, Q&A: ${metrics.qaCount}${
+    speedLine ? `\n${speedLine}` : ''
+  }`;
 }
 
 function updateSnapshot(text) {
