@@ -45,6 +45,7 @@ const heroJumpButtons = document.querySelectorAll('[data-jump]');
 const subscriptionModal = document.getElementById('subscriptionModal');
 const subscriptionCloseBtn = subscriptionModal?.querySelector('[data-close-modal]');
 const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingOverlay = document.getElementById('loadingOverlay');
 
 /* UI INIT ------------------------------------------------------------------ */
 initChipGroup('input-type', (value) => {
