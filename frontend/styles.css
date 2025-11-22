@@ -1,204 +1,575 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Earned+Owned AI Mapper</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <header class="hero">
-      <div class="hero__content">
-        <p class="eyebrow">EARNED + OWNED INTELLIGENCE</p>
-        <h1>Level up your content for the new era of search.</h1>
-        <p class="subtitle">
-          AI Mapper scores how your content performs across Google and AI engines, uncovers the gaps, and gives you step-by-step fixes that boost visibility, authority, and discovery.
-          Trusted by communications, marketing, and content teams who need reliable visibility in AI-driven search.
-        </p>
-        <div class="hero__cta">
-          <button class="cta hero-cta" type="button" data-jump="#analysis-tool">Run an Analysis</button>
-        </div>
-      </div>
-    </header>
+:root {
+  color-scheme: light dark;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #0f172a;
+  background-color: #f6f7f9;
+  --mint: #10b981;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --gradient: linear-gradient(135deg, var(--blue), var(--purple));
+  --card-bg: #fff;
+  --border: #e2e8f0;
+  --muted: #6b7280;
+  --danger: #dc2626;
+}
 
-    <main class="layout" id="analysis-tool">
-      <section class="panel input-panel">
-        <h2>1. Provide Content</h2>
-        <p class="panel__intro">Choose an input method, add the content, and optionally set the content type + industry for benchmarking.</p>
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-        <div class="field-group">
-          <label class="field-label">Input Method</label>
-          <div class="chip-group" data-field="input-type">
-            <button class="chip chip--active" data-value="url">URL</button>
-            <button class="chip" data-value="html">HTML</button>
-            <button class="chip" data-value="text">Text</button>
-          </div>
-        </div>
+body {
+  margin: 0;
+  min-height: 100vh;
+}
 
-        <div class="field-group" id="url-field">
-          <label for="urlInput">Content URL</label>
-          <input type="url" id="urlInput" placeholder="https://example.com/press-release" />
-          <p class="helper-text">Requires backend proxy for full analysis. HTTPS URLs score higher for Technical SEO.</p>
-        </div>
+.hero {
+  background: linear-gradient(140deg, #3b86f6, #8b5cf6 55%, #a855f7);
+  color: #fff;
+  padding: 4.5rem min(5vw, 4rem) 7rem;
+  position: relative;
+  overflow: hidden;
+}
 
-        <div class="field-group hidden" id="html-field">
-          <label for="htmlInput">Paste HTML</label>
-          <textarea id="htmlInput" rows="8" placeholder="Paste the full HTML source code here"></textarea>
-          <p class="helper-text">Includes schema + metadata checks. Ideal for QA before publishing.</p>
-        </div>
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.35), transparent 45%);
+  opacity: 0.9;
+  pointer-events: none;
+}
 
-        <div class="field-group hidden" id="text-field">
-          <label for="textInput">Plain Text</label>
-          <textarea id="textInput" rows="8" placeholder="Paste the draft content here"></textarea>
-          <p class="helper-text">Focuses on content quality + GEO factors. Technical SEO pillars use baseline estimations.</p>
-        </div>
+.hero__content {
+  max-width: 620px;
+  position: relative;
+  z-index: 1;
+}
 
-        <div class="field-inline">
-          <div class="field-group">
-            <label for="contentType">Content Type</label>
-            <select id="contentType">
-              <option value="pressRelease">Press Release</option>
-              <option value="blogArticle">Blog Article</option>
-              <option value="productPage">Product / Service Page</option>
-              <option value="landingPage">Landing / Campaign Page</option>
-              <option value="newsArticle">News / Editorial</option>
-              <option value="howTo">How-To Guide / Tutorial</option>
-            </select>
-            <p class="helper-text">Adjusts GEO weighting + recommendations.</p>
-          </div>
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  margin: 0 0 0.5rem;
+  opacity: 0.9;
+}
 
-          <div class="field-group">
-            <label for="industrySelect">Industry Benchmark</label>
-            <select id="industrySelect">
-              <option value="technology">Technology</option>
-              <option value="financial">Financial Services</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="retail">Retail &amp; E-commerce</option>
-              <option value="manufacturing">Manufacturing</option>
-              <option value="media">Media &amp; Publishing</option>
-              <option value="professional">Professional Services</option>
-              <option value="hospitality">Hospitality &amp; Travel</option>
-              <option value="education">Education</option>
-              <option value="nonProfit">Non-Profit</option>
-            </select>
-            <p class="helper-text">Compares your dual scores to industry averages.</p>
-          </div>
-        </div>
+.hero h1 {
+  font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+  margin: 0 0 1.25rem;
+  line-height: 1.2;
+}
 
-        <div class="field-group">
-          <label class="field-label">Scoring Mode</label>
-          <div class="chip-group" data-field="mode-toggle">
-            <button class="chip chip--active" data-value="dual">Dual Mode</button>
-            <button class="chip" data-value="seo">SEO Only</button>
-            <button class="chip" data-value="geo">GEO Only</button>
-          </div>
-        </div>
+.subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 2.25rem;
+  max-width: 560px;
+  opacity: 0.75;
+}
 
-        <div class="action-row">
-          <button id="analyzeBtn" class="cta">Run AI Mapper Analysis</button>
-          <button id="resetBtn" class="ghost">Reset</button>
-        </div>
-        <p class="helper-text small">Average runtime: 3–4 seconds. Backend URL fetch required for production URLs.</p>
-      </section>
+.hero__cta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
 
-      <section class="panel results-panel">
-        <div class="results-header">
-          <div>
-            <h2>2. Dual-Score Results</h2>
-            <p class="panel__intro">View SEO + GEO performance, pillar breakdowns, gap analysis, benchmarks, and actionable recommendations.</p>
-          </div>
-          <button id="exportBtn" class="ghost ghost--icon">
-            <span>Export HTML Report</span>
-            <span aria-hidden="true">↗</span>
-          </button>
-        </div>
+.hero-ghost {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
 
-        <div class="scores-grid">
-          <article class="score-card" id="seoScoreCard">
-            <p class="score-card__eyebrow">🔍 SEO Score</p>
-            <p class="score-card__value" id="seoScore">--</p>
-            <p class="score-card__desc">Technical + On-Page + Content Quality</p>
-          </article>
-          <article class="score-card" id="geoScoreCard">
-            <p class="score-card__eyebrow">🧠 GEO Score</p>
-            <p class="score-card__value" id="geoScore">--</p>
-            <p class="score-card__desc">LLM Comprehension + Prompt Alignment + AI Discovery</p>
-          </article>
-          <article class="score-card dual">
-            <p class="score-card__eyebrow">📊 Gap Analysis</p>
-            <p class="score-card__value" id="gapScore">--</p>
-            <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
-          </article>
-        </div>
+.layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: -2.5rem auto 2rem;
+  padding: 0 1rem 2rem;
+  position: relative;
+  z-index: 2;
+}
 
-        <div class="pillars" id="pillarBreakdown">
-          <!-- Pillar cards injected via JS -->
-        </div>
+.panel {
+  background: var(--card-bg);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
 
-        <div class="benchmarks" id="benchmarkComparison">
-          <h3>Industry Benchmark</h3>
-          <div class="benchmark-cards">
-            <div class="benchmark-card">
-              <p>SEO vs Avg</p>
-              <p class="benchmark-value" id="seoBenchmark"></p>
-              <p class="benchmark-label" id="seoBenchmarkLabel"></p>
-            </div>
-            <div class="benchmark-card">
-              <p>GEO vs Avg</p>
-              <p class="benchmark-value" id="geoBenchmark"></p>
-              <p class="benchmark-label" id="geoBenchmarkLabel"></p>
-            </div>
-          </div>
-        </div>
+.panel h2 {
+  margin: 0 0 0.25rem;
+}
 
-        <div class="recommendations">
-          <div class="recommendations__header">
-            <h3>Recommendations</h3>
-            <div class="chip-group" data-field="recommendation-view">
-              <button class="chip chip--active" data-value="combined">Combined</button>
-              <button class="chip" data-value="seo">SEO</button>
-              <button class="chip" data-value="geo">GEO</button>
-            </div>
-          </div>
-          <ul class="recommendation-list" id="recommendationList"></ul>
-        </div>
+.panel__intro {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
 
-        <div class="type-specific" id="typeSpecificFindings">
-          <h3>Content Type-Specific Findings</h3>
-          <ul></ul>
-        </div>
+.field-group {
+  margin-bottom: 1.25rem;
+}
 
-        <div class="analysis-log">
-          <h3>Analysis Snapshot</h3>
-          <pre id="analysisSnapshot">Run an analysis to view real metrics, schema detection, tone insights, and more.</pre>
-        </div>
-      </section>
-    </main>
+.field-inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
 
-    <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-hidden="true">
-      <div class="spinner" role="status"></div>
-      <p>Running AI Mapper analysis…</p>
-    </div>
+.field-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
 
-    <footer class="site-footer">
-      <p>Earned+Owned AI Mapper · Dual-mode SEO + GEO analysis · MVP v3.0</p>
-    </footer>
+input[type='url'],
+textarea,
+select {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  padding: 0.85rem;
+  font-size: 1rem;
+  font: inherit;
+  background: #fff;
+  color: inherit;
+}
 
-    <div class="modal" id="subscriptionModal">
-      <div class="modal__dialog">
-        <button class="modal__close" type="button" aria-label="Close" data-close-modal>&times;</button>
-        <p class="modal__eyebrow">Free analysis used</p>
-        <h3>Subscribe to continue running AI Mapper.</h3>
-        <p class="modal__body">
-          You’ve reached the free limit. Unlock unlimited analyses, report exports, and benchmarking by choosing a plan.
-        </p>
-        <a class="cta modal__cta" href="https://example.com/pricing" target="_blank" rel="noreferrer">Choose a plan</a>
-      </div>
-    </div>
+textarea {
+  resize: vertical;
+}
 
-    <script>
-      window.AI_MAPPER_API_URL = 'https://ai-mapper-backend.vercel.app';
-    </script>
-    <script type="module" src="./src/main.js"></script>
-  </body>
-</html>
+.helper-text {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.helper-text.small {
+  font-size: 0.75rem;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.2s ease;
+}
+
+.chip--active {
+  border-color: transparent;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.action-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cta,
+.ghost {
+  border: none;
+  border-radius: 0.85rem;
+  padding: 0.85rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta {
+  background: var(--gradient);
+  color: #fff;
+  box-shadow: 0 15px 35px rgba(59, 130, 246, 0.25);
+}
+
+.ghost {
+  background: rgba(15, 23, 42, 0.05);
+  color: #0f172a;
+}
+
+.ghost--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cta:active,
+.ghost:active {
+  transform: translateY(1px);
+}
+
+.hidden {
+  display: none;
+}
+
+.results-panel h3 {
+  margin-bottom: 0.35rem;
+}
+
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.score-card {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.score-card.dual {
+  border: none;
+  background: var(--gradient);
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+}
+
+.score-card__eyebrow {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.25rem;
+  opacity: 0.8;
+}
+
+.score-card__value {
+  font-size: 2.75rem;
+  margin: 0;
+}
+
+.score-card__desc {
+  margin: 0;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.pillar-card {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.pillar-card__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.pillar-card__score {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.chip--status {
+  border: none;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--mint);
+  font-weight: 600;
+}
+
+.chip--status.challenged {
+  background: rgba(234, 179, 8, 0.2);
+  color: #b45309;
+}
+
+.chip--status.risk {
+  background: rgba(220, 38, 38, 0.18);
+  color: var(--danger);
+}
+
+.pillar-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.pillar-points li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.benchmarks,
+.recommendations,
+.type-specific,
+.analysis-log {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.benchmark-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.benchmark-card {
+  border: 1px dashed var(--border);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  background: #f9fafb;
+}
+
+.benchmark-value {
+  font-size: 1.5rem;
+  margin: 0.35rem 0;
+}
+
+.benchmark-label {
+  margin: 0;
+  color: var(--muted);
+}
+
+.recommendations__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.recommendation-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.recommendation-item {
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  gap: 0.85rem;
+}
+
+.recommendation-item .priority {
+  font-size: 1.25rem;
+}
+
+.type-specific ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  color: var(--muted);
+}
+
+.analysis-log pre {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 999;
+}
+
+.modal--visible {
+  display: flex;
+}
+
+.modal__dialog {
+  background: #fff;
+  color: #0f172a;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+}
+
+.modal__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.modal__dialog h3 {
+  margin: 0 0 0.5rem;
+}
+
+.modal__body {
+  margin: 0 0 1.75rem;
+  color: var(--muted);
+}
+
+.modal__cta {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  justify-content: center;
+}
+
+.modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #fff;
+  z-index: 1200;
+  backdrop-filter: blur(3px);
+}
+
+.loading-overlay.loading-overlay--visible {
+  display: flex;
+}
+
+.spinner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 5px solid transparent;
+  border-top-color: #fff;
+  border-right-color: rgba(255, 255, 255, 0.6);
+  border-bottom-color: rgba(255, 255, 255, 0.35);
+  border-left-color: rgba(255, 255, 255, 0.2);
+  animation: spin 0.8s linear infinite, pulse 1.6s ease-in-out infinite;
+  box-shadow:
+    0 0 25px rgba(59, 130, 246, 0.35),
+    0 0 55px rgba(147, 51, 234, 0.25),
+    0 0 95px rgba(236, 72, 153, 0.15);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+    margin-top: -1.25rem;
+  }
+
+  .panel {
+    padding: 1.25rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0b1120;
+    color: #e2e8f0;
+  }
+
+  .panel,
+  input[type='url'],
+  textarea,
+  select {
+    background: #0f172a;
+    color: inherit;
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+
+  .chip {
+    background: #111827;
+    color: #cbd5f5;
+    border-color: rgba(148, 163, 184, 0.4);
+  }
+
+  .chip--active {
+    background: rgba(59, 130, 246, 0.25);
+  }
+
+  .score-card {
+    background: #0f172a;
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+
+  .benchmark-card {
+    background: #111827;
+    border-color: rgba(148, 163, 184, 0.35);
+  }
+
+  .analysis-log pre {
+    background: #020617;
+  }
+}
