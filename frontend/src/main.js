@@ -5,7 +5,7 @@ import { buildRecommendations, getTypeSpecificFindings } from './analysis/recomm
 // otherwise fall back to the deployed backend URL when running on Vercel or relative path locally.
 const API_BASE =
   window.AI_MAPPER_API_URL ||
-  (window.location.hostname.includes('vercel.app')
+  (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('aiomapper.com')
     ? 'https://ai-mapper-backend.vercel.app'
     : '');
 
