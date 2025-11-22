@@ -37,8 +37,7 @@ export default async function handler(req, res) {
           message: 'Free analysis limit reached. Subscribe to continue.',
         });
       }
-      const html = await fetchHtml(body.url);
-      const pageSpeed = await fetchPageSpeed(body.url);
+      const [html, pageSpeed] = await Promise.all([fetchHtml(body.url), fetchPageSpeed(body.url)]);
       if (!subscribed) {
         recordUsage(clientId);
       }
