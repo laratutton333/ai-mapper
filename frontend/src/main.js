@@ -44,6 +44,7 @@ const elements = {
 const heroJumpButtons = document.querySelectorAll('[data-jump]');
 const subscriptionModal = document.getElementById('subscriptionModal');
 const subscriptionCloseBtn = subscriptionModal?.querySelector('[data-close-modal]');
+const loadingOverlay = document.getElementById('loadingOverlay');
 
 /* UI INIT ------------------------------------------------------------------ */
 initChipGroup('input-type', (value) => {
@@ -159,6 +160,10 @@ async function handleAnalyze() {
 function setAnalysisState(isRunning) {
   elements.analyzeBtn.disabled = isRunning;
   elements.analyzeBtn.textContent = isRunning ? 'Analyzing…' : 'Run AI Mapper Analysis';
+  if (loadingOverlay) {
+    loadingOverlay.classList.toggle('loading-overlay--visible', isRunning);
+    loadingOverlay?.setAttribute('aria-hidden', isRunning ? 'false' : 'true');
+  }
 }
 
 async function fetchUrlContent(url) {
