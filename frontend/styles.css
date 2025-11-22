@@ -222,6 +222,35 @@ textarea {
   display: none;
 }
 
+.ai-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ai-spinner:not(.hidden) {
+  opacity: 1;
+}
+
+.ai-spinner__circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  border-top: 4px solid #fff;
+  border-right: 4px solid rgba(255, 255, 255, 0.6);
+  border-bottom: 4px solid rgba(255, 255, 255, 0.3);
+  border-left: 4px solid rgba(255, 255, 255, 0.1);
+  animation: spin 1.2s linear infinite, pulse 1.8s ease-in-out infinite;
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.35),
+    0 0 45px rgba(62, 152, 255, 0.25),
+    0 0 90px rgba(124, 72, 255, 0.15);
+}
+
 .results-panel h3 {
   margin-bottom: 0.35rem;
 }
@@ -498,6 +527,21 @@ textarea {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.9;
   }
 }
 
