@@ -478,7 +478,8 @@ textarea {
   justify-content: center;
   gap: 1rem;
   color: #fff;
-  z-index: 900;
+  z-index: 1200;
+  backdrop-filter: blur(3px);
 }
 
 .loading-overlay.loading-overlay--visible {
