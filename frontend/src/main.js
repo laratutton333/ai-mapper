@@ -41,6 +41,7 @@ const elements = {
   typeSpecific: document.querySelector('#typeSpecificFindings ul'),
   snapshot: document.getElementById('analysisSnapshot'),
 };
+const heroJumpButtons = document.querySelectorAll('[data-jump]');
 
 /* UI INIT ------------------------------------------------------------------ */
 initChipGroup('input-type', (value) => {
@@ -62,6 +63,15 @@ initChipGroup('recommendation-view', (value) => {
 elements.analyzeBtn.addEventListener('click', handleAnalyze);
 elements.resetBtn.addEventListener('click', resetForm);
 elements.exportBtn.addEventListener('click', exportReport);
+heroJumpButtons.forEach((button) => {
+  const targetSelector = button.dataset.jump;
+  if (!targetSelector) return;
+  const target = document.querySelector(targetSelector);
+  if (!target) return;
+  button.addEventListener('click', () => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
 
 toggleInputFields(state.inputType);
 
