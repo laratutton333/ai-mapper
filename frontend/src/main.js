@@ -45,7 +45,6 @@ const heroJumpButtons = document.querySelectorAll('[data-jump]');
 const subscriptionModal = document.getElementById('subscriptionModal');
 const subscriptionCloseBtn = subscriptionModal?.querySelector('[data-close-modal]');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const analyzeSpinner = document.getElementById('loadingSpinner');
 
 /* UI INIT ------------------------------------------------------------------ */
 initChipGroup('input-type', (value) => {
@@ -164,9 +163,6 @@ function setAnalysisState(isRunning) {
   if (loadingOverlay) {
     loadingOverlay.classList.toggle('loading-overlay--visible', isRunning);
     loadingOverlay?.setAttribute('aria-hidden', isRunning ? 'false' : 'true');
-  }
-  if (analyzeSpinner) {
-    analyzeSpinner.classList.toggle('hidden', !isRunning);
   }
 }
 
