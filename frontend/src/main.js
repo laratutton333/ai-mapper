@@ -42,6 +42,8 @@ const elements = {
   snapshot: document.getElementById('analysisSnapshot'),
 };
 const heroJumpButtons = document.querySelectorAll('[data-jump]');
+const subscriptionModal = document.getElementById('subscriptionModal');
+const subscriptionCloseBtn = subscriptionModal?.querySelector('[data-close-modal]');
 
 /* UI INIT ------------------------------------------------------------------ */
 initChipGroup('input-type', (value) => {
@@ -71,6 +73,12 @@ heroJumpButtons.forEach((button) => {
   button.addEventListener('click', () => {
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+});
+subscriptionCloseBtn?.addEventListener('click', hideSubscriptionModal);
+subscriptionModal?.addEventListener('click', (event) => {
+  if (event.target === subscriptionModal) {
+    hideSubscriptionModal();
+  }
 });
 
 toggleInputFields(state.inputType);
@@ -136,8 +144,13 @@ async function handleAnalyze() {
     renderResults(result);
   } catch (error) {
     console.error(error);
-    alert(error.message ?? 'Unable to analyze content.');
-    updateSnapshot(`Unable to analyze content.\nReason: ${error.message}`);
+    if (error.code === 'subscription_required') {
+      showSubscriptionModal();
+      updateSnapshot('Subscription required to continue analyzing content.');
+    } else {
+      alert(error.message ?? 'Unable to analyze content.');
+      updateSnapshot(`Unable to analyze content.\nReason: ${error.message}`);
+    }
   } finally {
     setAnalysisState(false);
   }
@@ -158,7 +171,19 @@ async function fetchUrlContent(url) {
       body,
     });
     if (!response.ok) {
-      throw new Error('Backend server unavailable or returned an error.');
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch {
+        // ignore
+      }
+      if (payload?.error === 'subscription_required') {
+        const error = new Error(payload.message ?? 'Subscription required to continue.');
+        error.code = 'subscription_required';
+        throw error;
+      }
+      const message = payload?.message || payload?.error || 'Backend server unavailable or returned an error.';
+      throw new Error(message);
     }
     const data = await response.json();
     return { html: data.html ?? '', pageSpeed: data.pageSpeed ?? null };
@@ -167,7 +192,8 @@ async function fetchUrlContent(url) {
     try {
       const proxied = await fetch(url);
       if (!proxied.ok) throw new Error('Direct fetch failed.');
-      return await proxied.text();
+      const html = await proxied.text();
+      return { html, pageSpeed: null };
     } catch (directError) {
       console.warn('Unable to fetch URL without backend', directError);
       throw error;
@@ -613,6 +639,14 @@ Sentences: ${metrics.sentenceCount}, Entities: ${metrics.entityDefinitions}, Q&A
 
 function updateSnapshot(text) {
   elements.snapshot.textContent = text;
+}
+
+function showSubscriptionModal() {
+  subscriptionModal?.classList.add('modal--visible');
+}
+
+function hideSubscriptionModal() {
+  subscriptionModal?.classList.remove('modal--visible');
 }
 
 /* UTILITIES ---------------------------------------------------------------- */
