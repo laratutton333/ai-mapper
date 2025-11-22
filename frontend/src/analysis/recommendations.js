@@ -21,7 +21,8 @@ const SEO_RULES = [
     id: 'titleLength',
     text: 'Optimize the title tag to 50–60 characters for SERP pixel control.',
     priority: 'Medium',
-    condition: (metrics) => metrics.titleLength && (metrics.titleLength < 50 || metrics.titleLength > 60),
+    condition: (metrics, ctx) =>
+      ctx.contentType !== 'pressRelease' && metrics.titleLength && (metrics.titleLength < 50 || metrics.titleLength > 60),
   },
   {
     id: 'metaDescription',
@@ -45,7 +46,8 @@ const SEO_RULES = [
     id: 'speed',
     text: 'Improve page load speed by compressing media and deferring heavy scripts.',
     priority: 'High',
-    condition: (metrics) => metrics.pageSpeedEstimate < 75,
+    condition: (metrics, ctx) =>
+      ctx.contentType === 'pressRelease' ? metrics.pageSpeedEstimate < 65 : metrics.pageSpeedEstimate < 75,
   },
   {
     id: 'wordCount',
@@ -72,7 +74,7 @@ const GEO_RULES = [
     id: 'qaFormat',
     text: 'Convert key talking points into a mini Q&A block to mimic prompt-ready snippets.',
     priority: 'High',
-    condition: (metrics) => metrics.qaCount < 3,
+    condition: (metrics, ctx) => ctx.contentType !== 'pressRelease' && metrics.qaCount < 3,
   },
   {
     id: 'conversationalTone',
@@ -90,13 +92,14 @@ const GEO_RULES = [
     id: 'attribution',
     text: 'Add clear attribution (“Name, Title said…”) to boost trust and citation readiness.',
     priority: 'Medium',
-    condition: (metrics) => metrics.attributionCount < 1,
+    condition: (metrics, ctx) =>
+      ctx.contentType === 'pressRelease' ? metrics.attributionCount < 1 : metrics.attributionCount < 2,
   },
   {
     id: 'voiceSearch',
     text: 'Add voice-search friendly questions beginning with who/what/when/where/why/how.',
     priority: 'High',
-    condition: (metrics) => metrics.voicePatternScore < 70,
+    condition: (metrics, ctx) => ctx.contentType !== 'pressRelease' && metrics.voicePatternScore < 70,
   },
   {
     id: 'parserStructure',
@@ -108,7 +111,12 @@ const GEO_RULES = [
     id: 'authority',
     text: 'Layer in proprietary data or POV to strengthen topical authority signals.',
     priority: 'High',
-    condition: (metrics) => metrics.topicalAuthorityScore < 70 && !metrics.hasProprietaryData,
+    condition: (metrics, ctx) => {
+      if (ctx.contentType === 'pressRelease') {
+        return !(metrics.attributionCount >= 1 || metrics.hasProprietaryData || metrics.factsPer100 >= 8);
+      }
+      return metrics.topicalAuthorityScore < 55 && !metrics.hasProprietaryData;
+    },
   },
 ];
 
