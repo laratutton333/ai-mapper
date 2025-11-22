@@ -406,6 +406,68 @@ textarea {
   font-size: 0.9rem;
 }
 
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 999;
+}
+
+.modal--visible {
+  display: flex;
+}
+
+.modal__dialog {
+  background: #fff;
+  color: #0f172a;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+}
+
+.modal__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.modal__dialog h3 {
+  margin: 0 0 0.5rem;
+}
+
+.modal__body {
+  margin: 0 0 1.75rem;
+  color: var(--muted);
+}
+
+.modal__cta {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  justify-content: center;
+}
+
+.modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
