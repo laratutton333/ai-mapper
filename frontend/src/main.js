@@ -165,6 +165,9 @@ function analyzeContent({ html, text, inputType, url, contentType, industry }) {
   const textStats = computeTextStats(text);
   const structural = analyzeStructure(html, inputType, url);
   const metrics = { ...textStats, ...structural };
+  if (metrics.hasDataTable) {
+    metrics.topicalAuthorityScore = Math.min(100, metrics.topicalAuthorityScore + 10);
+  }
   metrics.hasProprietaryData =
     metrics.hasDataTable ||
     metrics.factsPer100 >= 8 ||
@@ -174,7 +177,8 @@ function analyzeContent({ html, text, inputType, url, contentType, industry }) {
   const geo = scoreGEO(metrics, { contentType });
 
   const recommendations = buildRecommendations(metrics, { contentType });
-  const typeFindings = getTypeSpecificFindings(contentType, metrics);
+  const typeFindingsRaw = getTypeSpecificFindings(contentType, metrics);
+  const typeFindings = typeFindingsRaw.filter(Boolean);
 
   const snapshot = buildSnapshot(metrics, {
     inputType,
