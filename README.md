@@ -28,6 +28,8 @@ Dual-mode content analysis tool that evaluates press releases and owned content 
 
 > **Note:** Node.js 18+ is required for the backend (uses native `fetch`). If Node isn’t available (`node` command missing), install it before running the proxy.
 
+> **PageSpeed Insights:** To enrich analyses with real performance data, set the environment variable `PAGESPEED_API_KEY` (e.g., the provided `AIza...` key) before running the backend or deploying to Vercel. When set, the backend will call Google PageSpeed Insights for each URL and return real metrics (performance score, FCP, LCP, TBT) to the frontend.
+
 ## Key Features
 
 - Three input methods with tailored accuracy indicators (URL, HTML, Text) and automatic HTML parsing.
