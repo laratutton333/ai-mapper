@@ -3,11 +3,7 @@ import { buildRecommendations, getTypeSpecificFindings } from './analysis/recomm
 
 // Prefer explicit global override (set window.AI_MAPPER_API_URL before loading this script)
 // otherwise fall back to the deployed backend URL when running on Vercel or relative path locally.
-const API_BASE =
-  window.AI_MAPPER_API_URL ||
-  (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('aiomapper.com')
-    ? 'https://ai-mapper-backend.vercel.app'
-    : '');
+const API_BASE = window.AI_MAPPER_API_URL || 'https://ai-mapper-backend.vercel.app';
 
 const state = {
   inputType: 'url',
@@ -169,41 +165,34 @@ function setAnalysisState(isRunning) {
 async function fetchUrlContent(url) {
   const body = JSON.stringify({ url });
   const headers = { 'Content-Type': 'application/json' };
-  try {
-    const response = await fetch(`${API_BASE}/api/analyze`, {
-      method: 'POST',
-      headers,
-      body,
-    });
-    if (!response.ok) {
-      let payload = null;
-      try {
-        payload = await response.json();
-      } catch {
-        // ignore
-      }
-      if (payload?.error === 'subscription_required') {
-        const error = new Error(payload.message ?? 'Subscription required to continue.');
-        error.code = 'subscription_required';
-        throw error;
-      }
-      const message = payload?.message || payload?.error || 'Backend server unavailable or returned an error.';
-      throw new Error(message);
-    }
-    const data = await response.json();
-    return { html: data.html ?? '', pageSpeed: data.pageSpeed ?? null };
-  } catch (error) {
-    // Fallback direct fetch (may fail due to CORS)
+
+  const response = await fetch(`${API_BASE}/api/analyze`, {
+    method: 'POST',
+    headers,
+    body,
+  });
+
+  if (!response.ok) {
+    let payload = null;
     try {
-      const proxied = await fetch(url);
-      if (!proxied.ok) throw new Error('Direct fetch failed.');
-      const html = await proxied.text();
-      return { html, pageSpeed: null };
-    } catch (directError) {
-      console.warn('Unable to fetch URL without backend', directError);
+      payload = await response.json();
+    } catch {
+      // ignore JSON parsing errors
+    }
+
+    if (payload?.error === 'subscription_required') {
+      const error = new Error(payload.message ?? 'Subscription required to continue.');
+      error.code = 'subscription_required';
       throw error;
     }
+
+    const message =
+      payload?.message || payload?.error || 'Backend server unavailable or returned an error.';
+    throw new Error(message);
   }
+
+  const data = await response.json();
+  return { html: data.html ?? '', pageSpeed: data.pageSpeed ?? null };
 }
 
 function analyzeContent({ html, text, inputType, url, contentType, industry, pageSpeed }) {
