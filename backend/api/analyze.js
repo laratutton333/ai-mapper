@@ -4,6 +4,7 @@ const usageTracker = new Map();
 const FREE_ANALYSIS_LIMIT = Number(process.env.FREE_ANALYSIS_LIMIT ?? 1);
 const SUBSCRIPTION_TOKEN = process.env.SUBSCRIPTION_TOKEN ?? '';
 const USAGE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const PAGESPEED_TIMEOUT_MS = Number(process.env.PAGESPEED_TIMEOUT_MS ?? 4500);
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
@@ -102,9 +103,11 @@ async function fetchPageSpeed(targetUrl) {
   endpoint.searchParams.set('url', targetUrl);
   endpoint.searchParams.set('key', apiKey);
   endpoint.searchParams.set('strategy', 'mobile');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PAGESPEED_TIMEOUT_MS);
 
   try {
-    const response = await fetch(endpoint.toString());
+    const response = await fetch(endpoint.toString(), { signal: controller.signal });
     if (!response.ok) {
       console.warn('PageSpeed Insights error', await response.text());
       return null;
@@ -119,8 +122,14 @@ async function fetchPageSpeed(targetUrl) {
       cumulativeLayoutShift: lighthouse?.audits?.['cumulative-layout-shift']?.numericValue ?? null,
     };
   } catch (error) {
-    console.warn('Failed to fetch PageSpeed data', error);
+    if (error.name === 'AbortError') {
+      console.warn('PageSpeed request timed out');
+    } else {
+      console.warn('Failed to fetch PageSpeed data', error);
+    }
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
