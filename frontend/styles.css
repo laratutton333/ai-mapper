@@ -233,6 +233,86 @@ textarea {
   margin-bottom: 1.5rem;
 }
 
+.performance-panel {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem 1.25rem;
+  background: #fff;
+  margin-bottom: 1.5rem;
+}
+
+.performance-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.performance-score {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.performance-panel__intro {
+  margin: 0.35rem 0 0.85rem;
+}
+
+.performance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.performance-metric {
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.performance-label {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.performance-value {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.grade-badge {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.grade-badge--optimal {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+
+.grade-badge--acceptable {
+  background: rgba(251, 191, 36, 0.15);
+  color: #b45309;
+}
+
+.grade-badge--poor {
+  background: rgba(248, 113, 113, 0.2);
+  color: #b91c1c;
+}
+
 .score-card {
   padding: 1rem;
   border-radius: 1rem;

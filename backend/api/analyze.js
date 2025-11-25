@@ -1,10 +1,10 @@
 import { URL } from 'node:url';
+import { analyzePerformanceBasic } from '../analysis/performance.js';
 
 const usageTracker = new Map();
 const FREE_ANALYSIS_LIMIT = Number(process.env.FREE_ANALYSIS_LIMIT ?? 1);
 const SUBSCRIPTION_TOKEN = process.env.SUBSCRIPTION_TOKEN ?? '';
 const USAGE_WINDOW_MS = 24 * 60 * 60 * 1000;
-const PAGESPEED_TIMEOUT_MS = Number(process.env.PAGESPEED_TIMEOUT_MS ?? 4500);
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
@@ -38,11 +38,12 @@ export default async function handler(req, res) {
           message: 'Free analysis limit reached. Subscribe to continue.',
         });
       }
-      const [html, pageSpeed] = await Promise.all([fetchHtml(body.url), fetchPageSpeed(body.url)]);
+      const normalizedUrl = normalizeUrl(body.url);
+      const { html, performance } = await analyzePerformanceBasic(normalizedUrl);
       if (!subscribed) {
         recordUsage(clientId);
       }
-      return sendJson(res, 200, { html, pageSpeed });
+      return sendJson(res, 200, { html, result: { performance } });
     } catch (error) {
       console.error('Analyze error', error);
       return sendJson(res, 500, { error: error.message ?? 'Unable to analyze URL.' });
@@ -81,56 +82,6 @@ function readJsonBody(req) {
       })
       .on('error', reject);
   });
-}
-
-async function fetchHtml(targetUrl) {
-  const normalized = normalizeUrl(targetUrl);
-  const response = await fetch(normalized, {
-    headers: {
-      'User-Agent': 'Earned-Owned-AI-Mapper/1.0 (+https://example.com)',
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`Unable to fetch URL (${response.status})`);
-  }
-  return await response.text();
-}
-
-async function fetchPageSpeed(targetUrl) {
-  const apiKey = process.env.PAGESPEED_API_KEY;
-  if (!apiKey) return null;
-  const endpoint = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
-  endpoint.searchParams.set('url', targetUrl);
-  endpoint.searchParams.set('key', apiKey);
-  endpoint.searchParams.set('strategy', 'mobile');
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PAGESPEED_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(endpoint.toString(), { signal: controller.signal });
-    if (!response.ok) {
-      console.warn('PageSpeed Insights error', await response.text());
-      return null;
-    }
-    const data = await response.json();
-    const lighthouse = data.lighthouseResult;
-    return {
-      performanceScore: lighthouse?.categories?.performance?.score ?? null,
-      firstContentfulPaint: lighthouse?.audits?.['first-contentful-paint']?.numericValue ?? null,
-      largestContentfulPaint: lighthouse?.audits?.['largest-contentful-paint']?.numericValue ?? null,
-      totalBlockingTime: lighthouse?.audits?.['total-blocking-time']?.numericValue ?? null,
-      cumulativeLayoutShift: lighthouse?.audits?.['cumulative-layout-shift']?.numericValue ?? null,
-    };
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      console.warn('PageSpeed request timed out');
-    } else {
-      console.warn('Failed to fetch PageSpeed data', error);
-    }
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 function normalizeUrl(value) {

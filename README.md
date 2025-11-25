@@ -21,14 +21,14 @@ Dual-mode content analysis tool that evaluates press releases and owned content 
 2. **Backend**
    ```bash
    cd backend
-   npm install   # no deps, but establishes lockfile if desired
+   npm install   # install backend dependencies
    npm start
    ```
-   The backend exposes `POST /api/analyze` (expects `{ "url": "https://example.com" }`) and `GET /health`. It returns the fetched HTML so the frontend can perform a full analysis on URLs without CORS restrictions.
+   The backend exposes `POST /api/analyze` (expects `{ "url": "https://example.com" }`) and `GET /health`. It returns the fetched HTML so the frontend can perform a full analysis on URLs without CORS restrictions, plus a `result.performance` payload containing lightweight speed metrics (response time, HTML size, number of redirects/requests, largest image size, and a 0–100 performance score).
 
-> **Note:** Node.js 18+ is required for the backend (uses native `fetch`). If Node isn’t available (`node` command missing), install it before running the proxy.
+> **Note:** Node.js 18+ is required for the backend runtime. If Node isn’t available (`node` command missing), install it before running the proxy.
 
-> **PageSpeed Insights:** To enrich analyses with real performance data, set the environment variable `PAGESPEED_API_KEY` (e.g., the provided `AIza...` key) before running the backend or deploying to Vercel. When set, the backend will call Google PageSpeed Insights for each URL and return real metrics (performance score, FCP, LCP, TBT) to the frontend.
+> **Performance Snapshot:** URL analyses automatically run a lightweight performance check (axios fetch timing + image HEAD probes). Tune timeouts by setting `PERFORMANCE_TIMEOUT_MS` and `PERFORMANCE_HEAD_TIMEOUT_MS` if needed.
 
 ## Key Features
 
@@ -38,6 +38,7 @@ Dual-mode content analysis tool that evaluates press releases and owned content 
   - Schema detection (JSON-LD + microdata).
   - Conversational/Q&A/voice-search heuristics.
 - Dual scoring (SEO pillars + GEO pillars) with content type-specific weighting and industry benchmarks.
+- Performance snapshot: Response time, HTML weight, number of requests, largest image size, and an overall performance score (0–100) with graded badges.
 - Dynamic recommendation engine (SEO, GEO, combined) plus content-type playbooks.
 - Exportable HTML report capturing dual scores, pillars, recommendations, and snapshot data.
 

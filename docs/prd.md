@@ -101,12 +101,12 @@ Input content via URL/HTML/Text → app analyzes using real algorithms → outpu
 - Extracts plain text for readability analysis
 - Detects language for multilingual evaluation
 
-**Backend Integration (Optional)**
+**Backend Integration**
 
-- Node.js/Express server bypasses CORS
+- Node.js server bypasses CORS
 - Fetches complete HTML from any URL
 - Extracts technical SEO signals
-- Integrates with Google PageSpeed API (optional)
+- Captures lightweight performance metrics (response time, HTML weight, request count, largest image size) and returns a normalized 0–100 score
 
 ### 2. Real Analysis Engine
 
@@ -464,4 +464,3 @@ SEO Score: 65, GEO Score: 82 → improve SEO fundamentals
 Scenario: Product description
 SEO Score: 81, GEO Score: 71 → add FAQ and conversational context
 ```
-

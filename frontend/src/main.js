@@ -36,6 +36,8 @@ const elements = {
   recommendationList: document.getElementById('recommendationList'),
   typeSpecific: document.querySelector('#typeSpecificFindings ul'),
   snapshot: document.getElementById('analysisSnapshot'),
+  performanceScore: document.getElementById('performanceScoreValue'),
+  performanceGrid: document.getElementById('performanceGrid'),
 };
 const heroJumpButtons = document.querySelectorAll('[data-jump]');
 const subscriptionModal = document.getElementById('subscriptionModal');
@@ -112,12 +114,12 @@ async function handleAnalyze() {
 
   try {
     setAnalysisState(true);
-    let pageSpeed = null;
+    let performance = null;
     if (ctx.inputType === 'url') {
       if (!ctx.url) throw new Error('Please provide a URL to analyze.');
       const fetched = await fetchUrlContent(ctx.url);
       html = fetched.html;
-      pageSpeed = fetched.pageSpeed ?? null;
+      performance = fetched.performance ?? null;
       if (!html) throw new Error('Backend fetch failed. Provide HTML or text input instead.');
       text = htmlToText(html);
     } else if (ctx.inputType === 'html') {
@@ -133,7 +135,7 @@ async function handleAnalyze() {
     const result = analyzeContent({
       html,
       text,
-      pageSpeed,
+      performance,
       ...ctx,
     });
 
@@ -192,19 +194,16 @@ async function fetchUrlContent(url) {
   }
 
   const data = await response.json();
-  return { html: data.html ?? '', pageSpeed: data.pageSpeed ?? null };
+  const performance = data.result?.performance ?? data.performance ?? null;
+  return { html: data.html ?? '', performance };
 }
 
-function analyzeContent({ html, text, inputType, url, contentType, industry, pageSpeed }) {
+function analyzeContent({ html, text, inputType, url, contentType, industry, performance }) {
   const textStats = computeTextStats(text);
   const structural = analyzeStructure(html, inputType, url);
   const metrics = { ...textStats, ...structural };
   if (metrics.hasDataTable) {
     metrics.topicalAuthorityScore = Math.min(100, metrics.topicalAuthorityScore + 10);
-  }
-  if (pageSpeed?.performanceScore) {
-    metrics.pageSpeedEstimate = Math.round(pageSpeed.performanceScore * 100);
-    metrics.pageSpeedDetails = pageSpeed;
   }
   metrics.hasProprietaryData =
     metrics.hasDataTable ||
@@ -223,6 +222,7 @@ function analyzeContent({ html, text, inputType, url, contentType, industry, pag
     url,
     schema: structural.schemaTypes,
     readability: textStats.readability,
+    performance,
   });
 
   const result = {
@@ -234,6 +234,7 @@ function analyzeContent({ html, text, inputType, url, contentType, industry, pag
     snapshot,
     metrics,
     meta: { inputType, url, contentType, industry },
+    performance,
   };
 
   return result;
@@ -521,7 +522,7 @@ function scoreGEO(metrics, ctx) {
 
 /* RENDERING ---------------------------------------------------------------- */
 function renderResults(result) {
-  const { seoScore, geoScore, pillars, recommendations, typeFindings, metrics } = result;
+  const { seoScore, geoScore, pillars, recommendations, typeFindings, metrics, performance } = result;
   elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
   elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
 
@@ -538,6 +539,7 @@ function renderResults(result) {
   renderPillars(pillars);
   renderRecommendations(recommendations);
   renderTypeSpecific(typeFindings);
+  renderPerformance(performance);
   updateBenchmarks(result);
   updateSnapshot(result.snapshot + `\nWords: ${metrics.wordCount} · Readability: ${metrics.readability.toFixed(1)} · Facts/100 words: ${metrics.factsPer100.toFixed(1)}`);
 }
@@ -593,6 +595,59 @@ function renderTypeSpecific(list) {
   });
 }
 
+function renderPerformance(performance) {
+  if (!elements.performanceGrid || !elements.performanceScore) return;
+  if (!performance) {
+    elements.performanceScore.textContent = '-- / 100';
+    elements.performanceGrid.innerHTML =
+      '<p class="helper-text small">URL fetching is required to display performance metrics.</p>';
+    return;
+  }
+
+  elements.performanceScore.textContent = `${performance.performanceScore} / 100`;
+  const gradeClass = {
+    optimal: 'grade-badge--optimal',
+    acceptable: 'grade-badge--acceptable',
+    poor: 'grade-badge--poor',
+  };
+
+  const metricRows = [
+    {
+      label: 'Response time (ms)',
+      value: `${performance.responseTimeMs}`,
+      grade: performance.grades.responseTime,
+    },
+    {
+      label: 'Page size (KB)',
+      value: `${formatBytesToKB(performance.pageSizeBytes)} KB`,
+      grade: performance.grades.pageSize,
+    },
+    {
+      label: 'Number of requests',
+      value: `${performance.numRequests}`,
+      grade: performance.grades.numRequests,
+    },
+    {
+      label: 'Largest image (KB)',
+      value: `${formatBytesToKB(performance.largestImageBytes)} KB`,
+      grade: performance.grades.largestImage,
+    },
+  ];
+
+  const template = metricRows
+    .map(
+      (metric) => `
+      <div class="performance-metric">
+        <p class="performance-label">${metric.label}</p>
+        <p class="performance-value">${metric.value}</p>
+        <span class="grade-badge ${gradeClass[metric.grade] ?? 'grade-badge--acceptable'}">${metric.grade}</span>
+      </div>`
+    )
+    .join('');
+
+  elements.performanceGrid.innerHTML = template;
+}
+
 function updateBenchmarks(result) {
   const industry = INDUSTRY_BENCHMARKS[result.meta.industry];
   if (!industry) {
@@ -612,22 +667,16 @@ function updateBenchmarks(result) {
 
 function buildSnapshot(metrics, meta) {
   const schemaInfo = meta.schema?.length ? meta.schema.join(', ') : 'None detected';
-  const speedLine = metrics.pageSpeedDetails
-    ? `PageSpeed score: ${Math.round((metrics.pageSpeedDetails.performanceScore ?? 0) * 100)} · FCP: ${
-        metrics.pageSpeedDetails.firstContentfulPaint
-          ? (metrics.pageSpeedDetails.firstContentfulPaint / 1000).toFixed(1)
-          : 'n/a'
-      }s · LCP: ${
-        metrics.pageSpeedDetails.largestContentfulPaint
-          ? (metrics.pageSpeedDetails.largestContentfulPaint / 1000).toFixed(1)
-          : 'n/a'
-      }s`
+  const perfLine = meta.performance
+    ? `Performance: ${meta.performance.performanceScore}/100 · Response: ${meta.performance.responseTimeMs}ms · Size: ${formatBytesToKB(
+        meta.performance.pageSizeBytes
+      )} KB · Requests: ${meta.performance.numRequests}`
     : null;
   return `Input: ${meta.inputType.toUpperCase()}${meta.url ? ` (${meta.url})` : ''}
 Schema: ${schemaInfo}
 Readability: ${meta.readability.toFixed(1)}
 Sentences: ${metrics.sentenceCount}, Entities: ${metrics.entityDefinitions}, Q&A: ${metrics.qaCount}${
-    speedLine ? `\n${speedLine}` : ''
+    perfLine ? `\n${perfLine}` : ''
   }`;
 }
 
@@ -830,6 +879,12 @@ function scale(value, inMin, inMax, outMin, outMax) {
   return outMin + ratio * (outMax - outMin);
 }
 
+function formatBytesToKB(bytes = 0) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return 0;
+  const kb = bytes / 1024;
+  return kb >= 100 ? Math.round(kb) : Number(kb.toFixed(1));
+}
+
 function evaluateRange(value = 0, min, max, maxPoints) {
   if (!value) return maxPoints / 2;
   if (value >= min && value <= max) return maxPoints;
@@ -861,6 +916,7 @@ function resetForm() {
   elements.geoBenchmark.textContent = '--';
   elements.seoBenchmarkLabel.textContent = '';
   elements.geoBenchmarkLabel.textContent = '';
+  renderPerformance(null);
 }
 
 function exportReport() {
@@ -869,6 +925,15 @@ function exportReport() {
     return;
   }
   const result = state.lastResult;
+  const performanceSection = result.performance
+    ? `<ul>
+  <li>Performance score: ${result.performance.performanceScore}/100</li>
+  <li>Response time: ${result.performance.responseTimeMs} ms (${result.performance.grades.responseTime})</li>
+  <li>Page size: ${formatBytesToKB(result.performance.pageSizeBytes)} KB (${result.performance.grades.pageSize})</li>
+  <li>Requests: ${result.performance.numRequests} (${result.performance.grades.numRequests})</li>
+  <li>Largest image: ${formatBytesToKB(result.performance.largestImageBytes)} KB (${result.performance.grades.largestImage})</li>
+</ul>`
+    : '<p>URL input required to capture live performance metrics.</p>';
   const report = `
 <!DOCTYPE html>
 <html lang="en">
@@ -899,6 +964,8 @@ ${result.pillars
 <ol>
 ${result.recommendations.combined.map((item) => `<li>${item.priority} — ${item.text}</li>`).join('\n')}
 </ol>
+<h2>Performance Metrics</h2>
+${performanceSection}
 <h2>Type-Specific Findings</h2>
 <ul>
 ${result.typeFindings.map((text) => `<li>${text}</li>`).join('\n')}
