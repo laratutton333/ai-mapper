@@ -598,13 +598,14 @@ function renderTypeSpecific(list) {
 function renderPerformance(performance) {
   if (!elements.performanceGrid || !elements.performanceScore) return;
   if (!performance) {
-    elements.performanceScore.textContent = '-- / 100';
+    elements.performanceScore.textContent = '--';
     elements.performanceGrid.innerHTML =
       '<p class="helper-text small">URL fetching is required to display performance metrics.</p>';
     return;
   }
 
-  elements.performanceScore.textContent = `${performance.performanceScore} / 100`;
+  const scoreText = Number.isFinite(performance.performanceScore) ? `${performance.performanceScore}` : '--';
+  elements.performanceScore.textContent = scoreText;
   const gradeClass = {
     optimal: 'grade-badge--optimal',
     acceptable: 'grade-badge--acceptable',

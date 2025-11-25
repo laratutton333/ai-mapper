@@ -134,18 +134,22 @@
           </article>
         </div>
 
-        <div class="performance-panel" id="performancePanel">
-          <div class="performance-panel__header">
-            <h3>Performance Snapshot</h3>
-            <span class="performance-score" id="performanceScoreValue">-- / 100</span>
+        <article class="score-card performance-card" id="performancePanel">
+          <div class="performance-card__heading">
+            <div>
+              <p class="score-card__eyebrow">⚙️ Performance</p>
+              <p class="performance-card__title">Performance Snapshot</p>
+              <p class="score-card__desc">Lightweight response metrics captured during URL fetch.</p>
+            </div>
+            <div class="performance-card__score">
+              <p class="score-card__value" id="performanceScoreValue">--</p>
+              <span class="performance-card__total">/100</span>
+            </div>
           </div>
-          <p class="panel__intro performance-panel__intro">
-            Lightweight response metrics captured when the backend fetched your URL.
-          </p>
           <div class="performance-grid" id="performanceGrid">
             <p class="helper-text small">Run a URL analysis to view live response time, payload size, and request counts.</p>
           </div>
-        </div>
+        </article>
 
         <div class="pillars" id="pillarBreakdown">
           <!-- Pillar cards injected via JS -->

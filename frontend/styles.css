@@ -233,42 +233,53 @@ textarea {
   margin-bottom: 1.5rem;
 }
 
-.performance-panel {
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 1rem;
-  padding: 1rem 1.25rem 1.25rem;
-  background: #fff;
+.performance-card {
   margin-bottom: 1.5rem;
 }
 
-.performance-panel__header {
+.performance-card__heading {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
-.performance-score {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--blue);
+.performance-card__title {
+  margin: 0.1rem 0 0.15rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
 }
 
-.performance-panel__intro {
-  margin: 0.35rem 0 0.85rem;
+.performance-card__score {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.performance-card__score .score-card__value {
+  margin: 0;
+}
+
+.performance-card__total {
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
 }
 
 .performance-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 .performance-metric {
   border: 1px solid var(--border);
   border-radius: 0.85rem;
   padding: 0.85rem;
-  background: #f8fafc;
+  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
