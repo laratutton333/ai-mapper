@@ -36,6 +36,10 @@ const elements = {
   recommendationList: document.getElementById('recommendationList'),
   typeSpecific: document.querySelector('#typeSpecificFindings ul'),
   snapshot: document.getElementById('analysisSnapshot'),
+  seoPillars: document.getElementById('seoPillars'),
+  geoPillars: document.getElementById('geoPillars'),
+  seoBreakdownScore: document.getElementById('seoBreakdownScore'),
+  geoBreakdownScore: document.getElementById('geoBreakdownScore'),
   performanceScore: document.getElementById('performanceScoreValue'),
   performanceGrid: document.getElementById('performanceGrid'),
 };
@@ -256,12 +260,16 @@ function analyzeContent({
     performance,
   });
 
-  const pillars = [...buildSeoPillars(seo.breakdown), ...buildGeoPillars(geo.breakdown)];
+  const seoPillars = buildSeoPillars(seo.breakdown);
+  const geoPillars = buildGeoPillars(geo.breakdown);
+  const pillars = [...seoPillars, ...geoPillars];
 
   const result = {
     seoScore: seo.total,
     geoScore: geo.total,
     pillars,
+    seoPillars,
+    geoPillars,
     recommendations,
     typeFindings,
     snapshot,
@@ -485,7 +493,7 @@ function inferOwnedDomain(url = '', doc) {
 
 /* RENDERING ---------------------------------------------------------------- */
 function renderResults(result) {
-  const { seoScore, geoScore, pillars, recommendations, typeFindings, metrics, performance } = result;
+  const { seoScore, geoScore, recommendations, typeFindings, metrics, performance, seoPillars, geoPillars } = result;
   elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
   elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
 
@@ -499,17 +507,33 @@ function renderResults(result) {
   }
   elements.gapNarrative.textContent = narrative;
 
-  renderPillars(pillars);
+  renderPillars(seoPillars, geoPillars, seoScore, geoScore);
   renderRecommendations(recommendations);
   renderTypeSpecific(typeFindings);
   renderPerformance(performance);
   updateBenchmarks(result);
-  updateSnapshot(result.snapshot + `\nWords: ${metrics.wordCount} · Readability: ${metrics.readability.toFixed(1)} · Facts/100 words: ${metrics.factsPer100.toFixed(1)}`);
+  renderSnapshotTable(result);
 }
 
-function renderPillars(pillars) {
-  elements.pillarBreakdown.innerHTML = '';
-  pillars.forEach((pillar) => {
+function renderPillars(seoPillars = [], geoPillars = [], seoScore = 0, geoScore = 0) {
+  if (elements.seoBreakdownScore) {
+    elements.seoBreakdownScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
+  }
+  if (elements.geoBreakdownScore) {
+    elements.geoBreakdownScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
+  }
+  renderPillarSection(elements.seoPillars, seoPillars);
+  renderPillarSection(elements.geoPillars, geoPillars);
+}
+
+function renderPillarSection(container, list = []) {
+  if (!container) return;
+  container.innerHTML = '';
+  if (!list.length) {
+    container.innerHTML = '<p class="helper-text small">No data yet.</p>';
+    return;
+  }
+  list.forEach((pillar) => {
     const status = classifyScore(pillar.score);
     const listItems = pillar.notes
       .map((note) => `<li><span>${note}</span></li>`)
@@ -527,7 +551,7 @@ function renderPillars(pillars) {
       <p class="panel__intro">${pillar.description}</p>
       <ul class="pillar-points">${listItems}</ul>
     `;
-    elements.pillarBreakdown.appendChild(card);
+    container.appendChild(card);
   });
 }
 
@@ -535,18 +559,57 @@ function renderRecommendations(recommendations) {
   const view = state.recommendationView;
   const list =
     view === 'seo' ? recommendations.seo : view === 'geo' ? recommendations.geo : recommendations.combined;
-  elements.recommendationList.innerHTML = '';
+  const groups = {
+    critical: { label: '🔥 Critical Fixes', items: [] },
+    high: { label: '⚡ High Priority', items: [] },
+    medium: { label: '👍 Medium Priority', items: [] },
+  };
+
   list.forEach((item) => {
-    const li = document.createElement('li');
-    li.className = 'recommendation-item';
-    li.innerHTML = `
-      <span class="priority">${item.priority}</span>
-      <div>
-        <p>${item.text}</p>
-      </div>
-    `;
-    elements.recommendationList.appendChild(li);
+    const bucket = classifyPriority(item.priority);
+    groups[bucket].items.push(item);
   });
+
+  elements.recommendationList.innerHTML = '';
+  const order = ['critical', 'high', 'medium'];
+  let appended = false;
+  order.forEach((key) => {
+    const group = groups[key];
+    if (!group.items.length) return;
+    appended = true;
+    const wrapper = document.createElement('li');
+    wrapper.className = 'recommendation-group';
+    wrapper.innerHTML = `<p class="recommendation-group__title">${group.label}</p>`;
+    const sublist = document.createElement('ul');
+    sublist.className = 'recommendation-group__list';
+    group.items.forEach((item) => {
+      const li = document.createElement('li');
+      li.className = 'recommendation-item';
+      li.innerHTML = `
+        <span class="priority">${item.priority}</span>
+        <div>
+          <p>${item.text}</p>
+        </div>
+      `;
+      sublist.appendChild(li);
+    });
+    wrapper.appendChild(sublist);
+    elements.recommendationList.appendChild(wrapper);
+  });
+
+  if (!appended) {
+    const empty = document.createElement('li');
+    empty.className = 'helper-text';
+    empty.textContent = 'No recommendations available.';
+    elements.recommendationList.appendChild(empty);
+  }
+}
+
+function classifyPriority(priority = '') {
+  const value = priority.toLowerCase();
+  if (value.includes('critical') || value.includes('🎯')) return 'critical';
+  if (value.includes('high')) return 'high';
+  return 'medium';
 }
 
 function renderTypeSpecific(list) {
@@ -556,6 +619,56 @@ function renderTypeSpecific(list) {
     li.textContent = text;
     elements.typeSpecific.appendChild(li);
   });
+}
+
+function renderSnapshotTable(result) {
+  if (!elements.snapshot || !result) return;
+  const metrics = result.metrics ?? {};
+  const meta = result.meta ?? {};
+  const performanceScore = result.performance?.performanceScore;
+  const rows = [
+    { label: 'Input Type', value: meta.inputType ? meta.inputType.toUpperCase() : 'N/A' },
+    { label: 'Input URL', value: meta.url || 'N/A' },
+    { label: 'Schema', value: formatList(metrics.schemaTypes ?? meta.schema) },
+    { label: 'Word Count', value: formatNumber(metrics.wordCount) },
+    { label: 'Sentences', value: formatNumber(metrics.sentenceCount) },
+    { label: 'Entities', value: formatNumber(metrics.entityDefinitions) },
+    { label: 'Q&A Blocks', value: formatNumber(metrics.qaCount) },
+    {
+      label: 'Readability',
+      value: Number.isFinite(metrics.readability ?? metrics.readabilityScore)
+        ? (metrics.readability ?? metrics.readabilityScore).toFixed(1)
+        : 'n/a',
+    },
+    {
+      label: 'Facts / 100 Words',
+      value: Number.isFinite(metrics.factsPer100 ?? metrics.factualDensity)
+        ? (metrics.factsPer100 ?? metrics.factualDensity).toFixed(1)
+        : 'n/a',
+    },
+    {
+      label: 'Speed Snapshot Score',
+      value: Number.isFinite(performanceScore) ? `${performanceScore}/100` : 'n/a',
+    },
+  ];
+
+  const tableRows = rows
+    .map(
+      (row) => `
+      <tr>
+        <th>${row.label}</th>
+        <td>${row.value}</td>
+      </tr>`
+    )
+    .join('');
+
+  elements.snapshot.innerHTML = `
+    <table class="snapshot-table">
+      <tbody>
+        ${tableRows}
+      </tbody>
+    </table>
+  `;
 }
 
 function renderPerformance(performance) {
@@ -646,7 +759,8 @@ Sentences: ${metrics.sentenceCount}, Entities: ${metrics.entityDefinitions}, Q&A
 }
 
 function updateSnapshot(text) {
-  elements.snapshot.textContent = text;
+  if (!elements.snapshot) return;
+  elements.snapshot.innerHTML = `<p class="snapshot-message">${text}</p>`;
 }
 
 function showSubscriptionModal() {
@@ -828,6 +942,23 @@ function formatBytesToKB(bytes = 0) {
   return kb >= 100 ? Math.round(kb) : Number(kb.toFixed(1));
 }
 
+function formatNumber(value) {
+  if (value === null || value === undefined) return 'n/a';
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 'n/a';
+  return number.toLocaleString();
+}
+
+function formatList(value) {
+  if (Array.isArray(value) && value.length) {
+    return value.join(', ');
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+  return 'None';
+}
+
 function classifyScore(score) {
   if (score >= 80) return { label: 'Strong', className: '' };
   if (score >= 60) return { label: 'Watch', className: 'challenged' };
@@ -838,9 +969,10 @@ function resetForm() {
   elements.urlInput.value = '';
   elements.htmlInput.value = '';
   elements.textInput.value = '';
-  elements.snapshot.textContent = 'Form reset. Add content and run analysis.';
+  updateSnapshot('Form reset. Add content and run analysis.');
   state.lastResult = null;
-  elements.pillarBreakdown.innerHTML = '';
+  if (elements.seoPillars) elements.seoPillars.innerHTML = '';
+  if (elements.geoPillars) elements.geoPillars.innerHTML = '';
   elements.recommendationList.innerHTML = '';
   elements.typeSpecific.innerHTML = '';
   elements.seoScore.textContent = '--';
@@ -851,6 +983,8 @@ function resetForm() {
   elements.geoBenchmark.textContent = '--';
   elements.seoBenchmarkLabel.textContent = '';
   elements.geoBenchmarkLabel.textContent = '';
+  if (elements.seoBreakdownScore) elements.seoBreakdownScore.textContent = '--';
+  if (elements.geoBreakdownScore) elements.geoBreakdownScore.textContent = '--';
   renderPerformance(null);
 }
 
@@ -889,9 +1023,15 @@ footer { margin-top: 2rem; font-size: 0.85rem; color: #475569; }
   <div class="score"><h2>SEO</h2><p>${result.seoScore}/100</p></div>
   <div class="score"><h2>GEO</h2><p>${result.geoScore}/100</p></div>
 </div>
-<h2>Pillars</h2>
+<h2>SEO Breakdown</h2>
 <ul>
-${result.pillars
+${(result.seoPillars ?? [])
+  .map((pillar) => `<li><strong>${pillar.label}</strong>: ${Math.round(pillar.score)} – ${pillar.description}</li>`)
+  .join('\n')}
+</ul>
+<h2>GEO Breakdown</h2>
+<ul>
+${(result.geoPillars ?? [])
   .map((pillar) => `<li><strong>${pillar.label}</strong>: ${Math.round(pillar.score)} – ${pillar.description}</li>`)
   .join('\n')}
 </ul>

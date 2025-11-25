@@ -137,9 +137,9 @@
         <article class="score-card performance-card" id="performancePanel">
           <div class="performance-card__heading">
             <div>
-              <p class="score-card__eyebrow">⚙️ Performance</p>
-              <p class="performance-card__title">Performance Snapshot</p>
-              <p class="score-card__desc">Lightweight response metrics captured during URL fetch.</p>
+              <p class="performance-card__eyebrow">Speed Snapshot</p>
+              <p class="performance-card__title">Lightweight fetch metrics (response time, payload size, requests, largest image).</p>
+              <p class="speed-note">Not a full SEO or GEO performance grade.</p>
             </div>
             <div class="performance-card__score">
               <p class="score-card__value" id="performanceScoreValue">--</p>
@@ -152,7 +152,20 @@
         </article>
 
         <div class="pillars" id="pillarBreakdown">
-          <!-- Pillar cards injected via JS -->
+          <section class="pillar-group">
+            <div class="pillar-group__header">
+              <p class="pillar-group__title">SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</p>
+              <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
+            </div>
+            <div class="pillar-grid" id="seoPillars"></div>
+          </section>
+          <section class="pillar-group">
+            <div class="pillar-group__header">
+              <p class="pillar-group__title">GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</p>
+              <p class="pillar-group__subtitle">LLM Comprehension + Prompt Alignment + AI Discovery</p>
+            </div>
+            <div class="pillar-grid" id="geoPillars"></div>
+          </section>
         </div>
 
         <div class="benchmarks" id="benchmarkComparison">
@@ -190,7 +203,9 @@
 
         <div class="analysis-log">
           <h3>Analysis Snapshot</h3>
-          <pre id="analysisSnapshot">Run an analysis to view real metrics, schema detection, tone insights, and more.</pre>
+          <div class="snapshot-grid" id="analysisSnapshot">
+            <p class="helper-text small">Run an analysis to view real metrics, schema detection, tone insights, and more.</p>
+          </div>
         </div>
       </section>
     </main>
