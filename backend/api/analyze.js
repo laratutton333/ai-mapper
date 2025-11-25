@@ -1,10 +1,13 @@
 import { URL } from 'node:url';
 import { analyzePerformanceBasic } from '../analysis/performance.js';
+import { extractMetrics } from '../analysis/extractMetrics.js';
+import { computeSeoScore, computeGeoScore } from '../analysis/scoring.js';
 
 const usageTracker = new Map();
 const FREE_ANALYSIS_LIMIT = Number(process.env.FREE_ANALYSIS_LIMIT ?? 1);
 const SUBSCRIPTION_TOKEN = process.env.SUBSCRIPTION_TOKEN ?? '';
 const USAGE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const MAX_BODY_SIZE = 2_000_000; // ~2MB
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
@@ -27,8 +30,8 @@ export default async function handler(req, res) {
   if (req.method === 'POST' && pathname.endsWith('/api/analyze')) {
     try {
       const body = await readJsonBody(req);
-      if (!body?.url) {
-        return sendJson(res, 400, { error: 'Missing URL in request body.' });
+      if (!body?.url && !body?.html && !body?.text) {
+        return sendJson(res, 400, { error: 'Provide a URL, HTML, or text to analyze.' });
       }
       const clientId = getClientId(req);
       const subscribed = isSubscribed(req, body);
@@ -38,12 +41,37 @@ export default async function handler(req, res) {
           message: 'Free analysis limit reached. Subscribe to continue.',
         });
       }
-      const normalizedUrl = normalizeUrl(body.url);
-      const { html, performance } = await analyzePerformanceBasic(normalizedUrl);
+      let html = '';
+      let performance = null;
+      let normalizedUrl = '';
+      if (body.url) {
+        normalizedUrl = normalizeUrl(body.url);
+        const performanceResult = await analyzePerformanceBasic(normalizedUrl);
+        html = performanceResult.html;
+        performance = performanceResult.performance;
+      } else if (body.html) {
+        html = body.html;
+      } else if (body.text) {
+        html = wrapTextAsHtml(body.text);
+      }
+      if (!html) {
+        throw new Error('No HTML content returned for analysis.');
+      }
+      const metrics = extractMetrics(html, normalizedUrl);
+      const seoResult = computeSeoScore(metrics, html);
+      const geoResult = computeGeoScore(metrics, html);
       if (!subscribed) {
         recordUsage(clientId);
       }
-      return sendJson(res, 200, { html, result: { performance } });
+      return sendJson(res, 200, {
+        html,
+        performance,
+        metrics,
+        seoScore: seoResult.total,
+        geoScore: geoResult.total,
+        seoBreakdown: seoResult.breakdown,
+        geoBreakdown: geoResult.breakdown,
+      });
     } catch (error) {
       console.error('Analyze error', error);
       return sendJson(res, 500, { error: error.message ?? 'Unable to analyze URL.' });
@@ -68,7 +96,7 @@ function readJsonBody(req) {
     req
       .on('data', (chunk) => {
         raw += chunk;
-        if (raw.length > 5_000) {
+        if (raw.length > MAX_BODY_SIZE) {
           req.destroy();
           reject(new Error('Payload too large.'));
         }
@@ -140,4 +168,11 @@ function recordUsage(clientId) {
     entry.count += 1;
     entry.timestamp = now;
   }
+}
+
+function wrapTextAsHtml(text = '') {
+  const normalized = String(text ?? '').trim();
+  if (!normalized) return '';
+  const blocks = normalized.split(/\n{2,}/).map((block) => `<p>${block.replace(/\n/g, ' ').trim()}</p>`);
+  return `<article>${blocks.join('')}</article>`;
 }

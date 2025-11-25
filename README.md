@@ -24,7 +24,7 @@ Dual-mode content analysis tool that evaluates press releases and owned content 
    npm install   # install backend dependencies
    npm start
    ```
-   The backend exposes `POST /api/analyze` (expects `{ "url": "https://example.com" }`) and `GET /health`. It returns the fetched HTML so the frontend can perform a full analysis on URLs without CORS restrictions, plus a `result.performance` payload containing lightweight speed metrics (response time, HTML size, number of redirects/requests, largest image size, and a 0–100 performance score).
+   The backend exposes `POST /api/analyze` (accepts `{ "url": "https://example.com" }`, or raw `{ html }` / `{ text }` payloads) and `GET /health`. It returns the analyzed HTML, lightweight performance metrics, the extracted metric set used for recommendations, and backend-computed SEO/GEO scores with detailed rule breakdowns.
 
 > **Note:** Node.js 18+ is required for the backend runtime. If Node isn’t available (`node` command missing), install it before running the proxy.
 

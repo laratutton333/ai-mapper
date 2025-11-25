@@ -109,33 +109,23 @@ async function handleAnalyze() {
     url: elements.urlInput.value.trim(),
   };
 
-  let html = '';
-  let text = '';
-
   try {
     setAnalysisState(true);
-    let performance = null;
-    if (ctx.inputType === 'url') {
-      if (!ctx.url) throw new Error('Please provide a URL to analyze.');
-      const fetched = await fetchUrlContent(ctx.url);
-      html = fetched.html;
-      performance = fetched.performance ?? null;
-      if (!html) throw new Error('Backend fetch failed. Provide HTML or text input instead.');
-      text = htmlToText(html);
-    } else if (ctx.inputType === 'html') {
-      html = elements.htmlInput.value.trim();
-      if (!html) throw new Error('Paste HTML source to analyze.');
-      text = htmlToText(html);
-    } else {
-      text = elements.textInput.value.trim();
-      if (!text) throw new Error('Paste text content to analyze.');
-      html = wrapTextAsHtml(text);
-    }
+    const payload = buildAnalysisPayload(ctx);
+    const fetched = await runAnalysis(payload);
+    const html = fetched.html ?? '';
+    if (!html) throw new Error('Analysis returned no HTML. Please try another input.');
+    const text = htmlToText(html);
 
     const result = analyzeContent({
       html,
       text,
-      performance,
+      performance: fetched.performance ?? null,
+      backendMetrics: fetched.metrics ?? null,
+      seoScore: fetched.seoScore,
+      geoScore: fetched.geoScore,
+      seoBreakdown: fetched.seoBreakdown ?? {},
+      geoBreakdown: fetched.geoBreakdown ?? {},
       ...ctx,
     });
 
@@ -164,8 +154,23 @@ function setAnalysisState(isRunning) {
   }
 }
 
-async function fetchUrlContent(url) {
-  const body = JSON.stringify({ url });
+function buildAnalysisPayload(ctx) {
+  if (ctx.inputType === 'url') {
+    if (!ctx.url) throw new Error('Please provide a URL to analyze.');
+    return { url: ctx.url };
+  }
+  if (ctx.inputType === 'html') {
+    const html = elements.htmlInput.value.trim();
+    if (!html) throw new Error('Paste HTML source to analyze.');
+    return { html };
+  }
+  const text = elements.textInput.value.trim();
+  if (!text) throw new Error('Paste text content to analyze.');
+  return { text };
+}
+
+async function runAnalysis(payload) {
+  const body = JSON.stringify(payload);
   const headers = { 'Content-Type': 'application/json' };
 
   const response = await fetch(`${API_BASE}/api/analyze`, {
@@ -194,14 +199,34 @@ async function fetchUrlContent(url) {
   }
 
   const data = await response.json();
-  const performance = data.result?.performance ?? data.performance ?? null;
-  return { html: data.html ?? '', performance };
+  return {
+    html: data.html ?? '',
+    performance: data.performance ?? null,
+    metrics: data.metrics ?? null,
+    seoScore: data.seoScore ?? 0,
+    geoScore: data.geoScore ?? 0,
+    seoBreakdown: data.seoBreakdown ?? {},
+    geoBreakdown: data.geoBreakdown ?? {},
+  };
 }
 
-function analyzeContent({ html, text, inputType, url, contentType, industry, performance }) {
+function analyzeContent({
+  html,
+  text,
+  inputType,
+  url,
+  contentType,
+  industry,
+  performance,
+  backendMetrics,
+  seoScore,
+  geoScore,
+  seoBreakdown,
+  geoBreakdown,
+}) {
   const textStats = computeTextStats(text);
   const structural = analyzeStructure(html, inputType, url);
-  const metrics = { ...textStats, ...structural };
+  const metrics = { ...textStats, ...structural, ...(backendMetrics ?? {}) };
   if (metrics.hasDataTable) {
     metrics.topicalAuthorityScore = Math.min(100, metrics.topicalAuthorityScore + 10);
   }
@@ -210,8 +235,14 @@ function analyzeContent({ html, text, inputType, url, contentType, industry, per
     metrics.factsPer100 >= 8 ||
     metrics.proprietarySignalScore >= 5;
 
-  const seo = scoreSEO(metrics, { inputType });
-  const geo = scoreGEO(metrics, { contentType });
+  const seo = {
+    total: Number.isFinite(seoScore) ? Number(seoScore) : 0,
+    breakdown: seoBreakdown ?? {},
+  };
+  const geo = {
+    total: Number.isFinite(geoScore) ? Number(geoScore) : 0,
+    breakdown: geoBreakdown ?? {},
+  };
 
   const recommendations = buildRecommendations(metrics, { contentType });
   const typeFindingsRaw = getTypeSpecificFindings(contentType, metrics);
@@ -225,19 +256,100 @@ function analyzeContent({ html, text, inputType, url, contentType, industry, per
     performance,
   });
 
+  const pillars = [...buildSeoPillars(seo.breakdown), ...buildGeoPillars(geo.breakdown)];
+
   const result = {
     seoScore: seo.total,
     geoScore: geo.total,
-    pillars: [...seo.pillars, ...geo.pillars],
+    pillars,
     recommendations,
     typeFindings,
     snapshot,
     metrics,
-    meta: { inputType, url, contentType, industry },
     performance,
+    seoBreakdown: seo.breakdown,
+    geoBreakdown: geo.breakdown,
+    meta: { inputType, url, contentType, industry },
   };
 
   return result;
+}
+
+const SEO_PILLAR_META = {
+  technical: {
+    id: 'technical',
+    label: 'Technical SEO',
+    description: 'Title/meta coverage, canonical hygiene, and baseline crawl signals.',
+    maxPoints: 30,
+  },
+  content: {
+    id: 'contentQuality',
+    label: 'Content Quality',
+    description: 'Keyword placement, internal linking, schema, and topical coverage.',
+    maxPoints: 35,
+  },
+  readability: {
+    id: 'readability',
+    label: 'Readability',
+    description: 'Sentence + paragraph length with scannable formatting.',
+    maxPoints: 30,
+  },
+};
+
+const GEO_PILLAR_META = {
+  directAnswer: {
+    id: 'directAnswer',
+    label: 'Direct Answer Quality',
+    description: 'Summary intros, definition clarity, snippet-ready formatting.',
+    maxPoints: 40,
+  },
+  conversational: {
+    id: 'conversational',
+    label: 'Conversational Structure',
+    description: 'Q&A coverage and heading alignment to intent.',
+    maxPoints: 30,
+  },
+  ingestion: {
+    id: 'ingestion',
+    label: 'LLM Ingestion Optimization',
+    description: 'Factual statements, redundancy control, and clarity.',
+    maxPoints: 30,
+  },
+};
+
+function buildSeoPillars(breakdown = {}) {
+  return buildPillarsFromBreakdown(breakdown, SEO_PILLAR_META);
+}
+
+function buildGeoPillars(breakdown = {}) {
+  return buildPillarsFromBreakdown(breakdown, GEO_PILLAR_META);
+}
+
+function buildPillarsFromBreakdown(breakdown = {}, categoryMeta = {}) {
+  const categories = {};
+  Object.values(breakdown).forEach((entry) => {
+    const meta = categoryMeta[entry.category];
+    if (!meta) return;
+    if (!categories[entry.category]) {
+      categories[entry.category] = { points: 0, max: 0, notes: [] };
+    }
+    categories[entry.category].points += entry.points ?? 0;
+    categories[entry.category].max += entry.maxPoints ?? 0;
+    categories[entry.category].notes.push(`${entry.label}: ${entry.points}/${entry.maxPoints}`);
+  });
+
+  return Object.entries(categoryMeta).map(([key, meta]) => {
+    const data = categories[key] ?? { points: 0, max: meta.maxPoints ?? 0, notes: [] };
+    const maxPoints = data.max || meta.maxPoints || 1;
+    const score = Math.round((data.points / maxPoints) * 100);
+    return {
+      id: meta.id,
+      label: meta.label,
+      description: meta.description,
+      score,
+      notes: data.notes.length ? data.notes : ['No checks evaluated.'],
+    };
+  });
 }
 
 /* TEXT + STRUCTURAL METRICS ------------------------------------------------ */
@@ -370,155 +482,6 @@ function inferOwnedDomain(url = '', doc) {
 }
 
 /* SCORING ------------------------------------------------------------------ */
-function scoreSEO(metrics, ctx) {
-  const schemaScore = metrics.schemaTypes.length ? 30 : ctx.inputType === 'text' ? 15 : 0;
-  const viewportScore = metrics.hasViewport ? 25 : ctx.inputType === 'text' ? 15 : 5;
-  const httpsScore = metrics.isHttps ? 20 : 5;
-  const speedScore = scale(metrics.pageSpeedEstimate, 0, 100, 0, 25);
-  const technical = schemaScore + viewportScore + httpsScore + speedScore;
-
-  const titleScore = evaluateRange(metrics.titleLength, 50, 60, 30);
-  const metaScore = evaluateRange(metrics.metaLength, 150, 160, 25);
-  const headerHierarchyScore = Math.min(25, metrics.headerScore * 0.25);
-  const keywordScore = metrics.keywordInIntro ? 20 : 5;
-  const onPage = titleScore + metaScore + headerHierarchyScore + keywordScore;
-
-  const wordCountScore = metrics.wordCount >= 800 ? 30 : scale(metrics.wordCount, 300, 800, 10, 30);
-  const readabilityScore = metrics.readability >= 60 ? 30 : scale(metrics.readability, 30, 60, 5, 30);
-  const structureScore = metrics.parserAccessibilityScore
-    ? Math.max(10, metrics.parserAccessibilityScore * 0.2)
-    : 12;
-  const linkScore = metrics.linkCount >= 4 ? 20 : scale(metrics.linkCount, 0, 4, 5, 20);
-  const contentQuality = wordCountScore + readabilityScore + structureScore + linkScore;
-
-  const total = Math.round(technical * 0.33 + onPage * 0.33 + contentQuality * 0.34);
-
-  return {
-    total,
-    pillars: [
-      {
-        id: 'technical',
-        label: 'Technical SEO',
-        score: Math.round(technical),
-        description: 'Schema, viewport, HTTPS, page speed estimates.',
-        notes: [
-          `${metrics.schemaTypes.length ? '✅' : '⚠️'} Schema`,
-          `${metrics.hasViewport ? '✅' : '⚠️'} Viewport`,
-          `${metrics.isHttps ? '✅' : '⚠️'} HTTPS`,
-          `⚡ Speed est: ${metrics.pageSpeedEstimate}`,
-        ],
-      },
-      {
-        id: 'onPage',
-        label: 'On-Page SEO',
-        score: Math.round(onPage),
-        description: 'Title/meta quality + header hierarchy + keyword placement.',
-        notes: [
-          `Title length: ${metrics.titleLength || 'n/a'}`,
-          `Meta length: ${metrics.metaLength || 'n/a'}`,
-          metrics.keywordInIntro ? '✅ Keyword front-loaded' : '⚠️ Keyword missing in intro',
-        ],
-      },
-      {
-        id: 'contentQuality',
-        label: 'Content Quality',
-        score: Math.round(contentQuality),
-        description: 'Depth, readability, structure, and link coverage.',
-        notes: [
-          `Words: ${metrics.wordCount}`,
-          `Readability: ${metrics.readability}`,
-          `Links: ${metrics.linkCount}`,
-        ],
-      },
-    ],
-  };
-}
-
-function scoreGEO(metrics, ctx) {
-  const entityScore = scale(metrics.entityDefinitions, 0, 5, 10, 30);
-  const infoDensityScore = metrics.factsPer100 >= 5 ? 30 : scale(metrics.factsPer100, 2, 5, 10, 30);
-  const semanticStructureScore = metrics.listCoverage ? Math.min(20, metrics.listCoverage * 5) : 10;
-  const contextRichnessScore = scale(metrics.avgWordLength, 4, 6, 10, 20);
-  let llmComprehension = entityScore + infoDensityScore + semanticStructureScore + contextRichnessScore;
-
-  const qaScore = metrics.qaCount >= 3 ? 35 : scale(metrics.qaCount, 0, 3, 10, 35);
-  const toneContribution = scale(metrics.conversationalToneScore, 30, 100, 10, 30);
-  const quotableScore = scale(metrics.quotableStatementsRatio, 0.2, 0.5, 5, 20);
-  const attributionScore = metrics.attributionCount >= 1 ? 15 : metrics.quotableStatements > 0 ? 10 : 5;
-  let promptAlignment = qaScore + toneContribution + quotableScore + attributionScore;
-
-  const flowScore = scoreNaturalLanguageFlow(metrics.avgSentenceLength);
-  const authorityScore = scale(metrics.topicalAuthorityScore, 40, 100, 10, 25);
-  const voiceScore = scale(metrics.voicePatternScore, 20, 80, 10, 25);
-  const parserScore = scale(metrics.parserAccessibilityScore, 40, 100, 10, 20);
-  let aiDiscovery = flowScore + authorityScore + voiceScore + parserScore;
-
-  // Content type weighting adjustments
-  if (ctx.contentType === 'pressRelease') {
-    if (!metrics.schemaTypes.includes('NewsArticle')) {
-      llmComprehension -= 10;
-    }
-    if (metrics.factsPer100 < 8) {
-      aiDiscovery -= 5;
-    }
-  } else if (ctx.contentType === 'blogArticle') {
-    if (!metrics.schemaTypes.includes('FAQPage')) {
-      promptAlignment -= 5;
-    }
-    if (metrics.qaCount < 3) {
-      promptAlignment -= 5;
-    }
-  } else if (ctx.contentType === 'productPage') {
-    if (!metrics.schemaTypes.includes('Product')) {
-      llmComprehension -= 8;
-    }
-  }
-
-  llmComprehension = clamp(llmComprehension, 0, 100);
-  promptAlignment = clamp(promptAlignment, 0, 100);
-  aiDiscovery = clamp(aiDiscovery, 0, 100);
-
-  const total = Math.round(llmComprehension * 0.33 + promptAlignment * 0.33 + aiDiscovery * 0.34);
-
-  return {
-    total,
-    pillars: [
-      {
-        id: 'llm',
-        label: 'LLM Comprehension',
-        score: Math.round(llmComprehension),
-        description: 'Entity clarity, information density, semantic cues.',
-        notes: [
-          `Entities: ${metrics.entityDefinitions}`,
-          `Facts/100 words: ${metrics.factsPer100.toFixed(1)}`,
-          metrics.schemaTypes.length ? '✅ Structured data detected' : '⚠️ No schema',
-        ],
-      },
-      {
-        id: 'prompt',
-        label: 'Prompt Alignment',
-        score: Math.round(promptAlignment),
-        description: 'Q&A patterns, conversational tone, quotable statements.',
-        notes: [
-          `Q&A count: ${metrics.qaCount}`,
-          `Tone markers: ${metrics.conversationalMarkers}`,
-          `Quotable ratio: ${(metrics.quotableStatementsRatio * 100).toFixed(0)}%`,
-        ],
-      },
-      {
-        id: 'aiDiscovery',
-        label: 'AI Discovery Signals',
-        score: Math.round(aiDiscovery),
-        description: 'Natural flow, topical authority, voice search readiness.',
-        notes: [
-          `Sentence length: ${metrics.avgSentenceLength.toFixed(1)}`,
-          `Voice score: ${metrics.voicePatternScore.toFixed(0)}`,
-          `Authority: ${metrics.topicalAuthorityScore.toFixed(0)}`,
-        ],
-      },
-    ],
-  };
-}
 
 /* RENDERING ---------------------------------------------------------------- */
 function renderResults(result) {
@@ -606,6 +569,7 @@ function renderPerformance(performance) {
 
   const scoreText = Number.isFinite(performance.performanceScore) ? `${performance.performanceScore}` : '--';
   elements.performanceScore.textContent = scoreText;
+  const grades = performance.grades ?? {};
   const gradeClass = {
     optimal: 'grade-badge--optimal',
     acceptable: 'grade-badge--acceptable',
@@ -616,22 +580,22 @@ function renderPerformance(performance) {
     {
       label: 'Response time (ms)',
       value: `${performance.responseTimeMs}`,
-      grade: performance.grades.responseTime,
+      grade: grades.responseTime ?? 'acceptable',
     },
     {
       label: 'Page size (KB)',
       value: `${formatBytesToKB(performance.pageSizeBytes)} KB`,
-      grade: performance.grades.pageSize,
+      grade: grades.pageSize ?? 'acceptable',
     },
     {
       label: 'Number of requests',
       value: `${performance.numRequests}`,
-      grade: performance.grades.numRequests,
+      grade: grades.numRequests ?? 'acceptable',
     },
     {
       label: 'Largest image (KB)',
       value: `${formatBytesToKB(performance.largestImageBytes)} KB`,
-      grade: performance.grades.largestImage,
+      grade: grades.largestImage ?? 'acceptable',
     },
   ];
 
@@ -699,10 +663,6 @@ function htmlToText(html) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   return doc.body?.textContent ?? '';
-}
-
-function wrapTextAsHtml(text) {
-  return `<article><p>${text.replace(/\n/g, '</p><p>')}</p></article>`;
 }
 
 function extractSchemaTypes(doc) {
@@ -849,12 +809,6 @@ function scoreParserAccessibility(text) {
   return Math.min(100, ratio * 100 + bulletCount * 2);
 }
 
-function scoreNaturalLanguageFlow(avgSentenceLength) {
-  if (!avgSentenceLength) return 10;
-  if (avgSentenceLength >= 15 && avgSentenceLength <= 25) return 30;
-  return Math.max(10, 30 - Math.abs(20 - avgSentenceLength) * 1.5);
-}
-
 function countAttributionStatements(text) {
   const attributionVerbs = (text.match(/\b(said|according to|stated|noted|reports|announced)\b/gi) ?? []).length;
   const quotes = (text.match(/["“”]/g) ?? []).length / 2;
@@ -868,30 +822,10 @@ function scoreProprietarySignals(text) {
   return currencyMatches.length + percentMatches.length + dataKeywords.length;
 }
 
-function clamp(value, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function scale(value, inMin, inMax, outMin, outMax) {
-  if (!Number.isFinite(value)) return outMin;
-  if (value <= inMin) return outMin;
-  if (value >= inMax) return outMax;
-  const ratio = (value - inMin) / (inMax - inMin);
-  return outMin + ratio * (outMax - outMin);
-}
-
 function formatBytesToKB(bytes = 0) {
   if (!Number.isFinite(bytes) || bytes <= 0) return 0;
   const kb = bytes / 1024;
   return kb >= 100 ? Math.round(kb) : Number(kb.toFixed(1));
-}
-
-function evaluateRange(value = 0, min, max, maxPoints) {
-  if (!value) return maxPoints / 2;
-  if (value >= min && value <= max) return maxPoints;
-  const distance = Math.min(Math.abs(value - min), Math.abs(value - max));
-  const penalty = (distance / max) * maxPoints;
-  return Math.max(maxPoints - penalty, maxPoints / 2);
 }
 
 function classifyScore(score) {
