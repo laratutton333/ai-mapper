@@ -396,44 +396,33 @@ textarea {
 }
 
 .results-grid {
+  margin-top: 12px;
+}
+
+.analysis-sections {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  column-gap: 32px;
-  row-gap: 48px;
-  margin-top: 48px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: start;
 }
 
 .results-card {
   width: 100%;
-  max-width: 560px;
   justify-self: center;
 }
 
 @media (max-width: 767px) {
-  .results-grid {
+  .analysis-sections {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (min-width: 768px) and (max-width: 1279px) {
-  .results-grid {
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  }
-}
-
-@media (min-width: 1280px) {
-  .results-grid {
-    grid-template-columns: repeat(2, minmax(360px, 1fr));
-    column-gap: 48px;
-    row-gap: 48px;
-  }
-
-  .results-card[data-column='left'] {
-    grid-column: 1;
-  }
-
-  .results-card[data-column='right'] {
-    grid-column: 2;
+@media (max-width: 900px) {
+  .analysis-sections {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -617,13 +606,17 @@ textarea {
 }
 
 .score-card {
-  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
   border-radius: 1rem;
   border: 1px solid rgba(226, 232, 240, 0.15);
   background: var(--card-bg);
   position: relative;
-  overflow: hidden;
   color: inherit;
+  min-height: unset;
+  height: auto;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -1424,4 +1417,10 @@ textarea {
 .breakdown-section {
   overflow: visible;
   position: relative;
+}
+.card {
+  height: auto;
+  min-height: auto;
+  max-width: 100%;
+  overflow: hidden;
 }

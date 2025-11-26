@@ -140,8 +140,8 @@
             <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
           </div>
 
-        <div class="results-grid" id="resultsGrid">
-          <article class="results-card score-card hover-card" data-column="left" id="seoScoreCard">
+        <div class="results-grid analysis-sections" id="resultsGrid">
+          <article class="results-card score-card hover-card card" data-column="left" id="seoScoreCard">
             <div class="skeleton skeleton-card" id="seoScoreSkeleton">
               <div class="skeleton-line"></div>
               <div class="skeleton-line skeleton-line--lg"></div>
@@ -155,7 +155,7 @@
             <p class="score-card__desc">Technical + on-page structure and content quality.</p>
           </article>
 
-          <article class="results-card score-card hover-card" data-column="right" id="geoScoreCard">
+          <article class="results-card score-card hover-card card" data-column="right" id="geoScoreCard">
             <div class="skeleton skeleton-card" id="geoScoreSkeleton">
               <div class="skeleton-line"></div>
               <div class="skeleton-line skeleton-line--lg"></div>
@@ -169,7 +169,7 @@
             <p class="score-card__desc">LLM comprehension, prompt alignment, and AI discoverability.</p>
           </article>
 
-          <article class="results-card score-card dual hover-card" data-column="left">
+          <article class="results-card score-card dual hover-card card" data-column="left">
             <p class="score-card__eyebrow label-with-icon">
               <span data-icon="barChart" data-label="Gap Analysis"></span>
               <span>Gap Analysis</span>
@@ -178,7 +178,7 @@
             <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
           </article>
 
-          <article class="results-card score-card performance-card hover-card" data-column="left" id="performancePanel">
+          <article class="results-card score-card performance-card hover-card card" data-column="left" id="performancePanel">
             <div class="performance-card__heading">
               <div>
                 <p class="performance-card__eyebrow label-with-icon">
@@ -201,7 +201,7 @@
             </div>
           </article>
 
-          <section class="results-card collapsible-card hover-card breakdown-section" data-column="left">
+          <section class="results-card collapsible-card hover-card breakdown-section card" data-column="left">
             <button class="collapsible-toggle" type="button" data-collapse-target="seoPillarsPanel" aria-expanded="true">
               <div class="collapsible-copy">
                 <p class="pillar-group__title label-with-icon">
@@ -222,7 +222,7 @@
             </div>
           </section>
 
-          <section class="results-card collapsible-card hover-card breakdown-section" data-column="right">
+          <section class="results-card collapsible-card hover-card breakdown-section card" data-column="right">
             <button class="collapsible-toggle" type="button" data-collapse-target="geoPillarsPanel" aria-expanded="true">
               <div class="collapsible-copy">
                 <p class="pillar-group__title label-with-icon">
@@ -243,7 +243,7 @@
             </div>
           </section>
 
-          <section class="results-card bing-card hover-card" data-column="right" id="bingVerification">
+          <section class="results-card bing-card hover-card card" data-column="right" id="bingVerification">
             <div class="bing-card__header label-with-icon">
               <span data-icon="shieldCheck" data-label="Microsoft and Bing Verification"></span>
               <h3>Microsoft/Bing Verification</h3>
@@ -251,7 +251,7 @@
             <ul class="bing-checks-list" id="bingChecksList"></ul>
           </section>
 
-          <div class="results-card benchmarks hover-card" data-column="right" id="benchmarkComparison">
+          <div class="results-card benchmarks hover-card card" data-column="right" id="benchmarkComparison">
             <h3 class="label-with-icon">
               <span data-icon="lineChart" data-label="Industry Benchmark"></span>
               <span>Industry Benchmark</span>
@@ -270,7 +270,7 @@
             </div>
           </div>
 
-          <div class="results-card recommendations hover-card" data-column="right">
+          <div class="results-card recommendations hover-card card" data-column="right">
             <div class="recommendations__header">
               <h3 class="label-with-icon">
                 <span data-icon="list" data-label="Recommendations"></span>
@@ -290,7 +290,7 @@
             </div>
           </div>
 
-          <div class="results-card type-specific hover-card" data-column="right" id="typeSpecificFindings">
+          <div class="results-card type-specific hover-card card" data-column="right" id="typeSpecificFindings">
             <h3 class="label-with-icon">
               <span data-icon="pin" data-label="Content Type Findings"></span>
               <span>Content Type-Specific Findings</span>
@@ -298,7 +298,7 @@
             <ul></ul>
           </div>
 
-          <div class="results-card analysis-log hover-card" data-column="right">
+          <div class="results-card analysis-log hover-card card" data-column="right">
             <h3 class="label-with-icon">
               <span data-icon="table" data-label="Analysis Snapshot"></span>
               <span>Analysis Snapshot</span>
