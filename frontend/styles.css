@@ -12,6 +12,7 @@
   --card-bg: #0f172a;
   --card-elevated: #111f2f;
   --border: rgba(148, 163, 184, 0.22);
+  --card-border: rgba(255, 255, 255, 0.05);
   --muted: #94a3b8;
   --danger: #f87171;
   --input-bg: #0b1629;
@@ -87,15 +88,32 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
-  gap: 1.5rem;
-  max-width: 1200px;
+.main-container {
+  max-width: 1280px;
+  width: 100%;
   margin: -2.5rem auto 2rem;
-  padding: 0 1rem 2rem;
+  padding: 0 16px 2rem;
   position: relative;
   z-index: 2;
+}
+
+.layout-columns {
+  display: grid;
+  grid-template-columns: minmax(320px, 360px) 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .layout-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .panel {
@@ -400,12 +418,14 @@ textarea {
 }
 
 .analysis-sections {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 24px;
+  margin-top: 12px;
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+}
+
+.result-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
   align-items: start;
 }
 
@@ -611,7 +631,7 @@ textarea {
   gap: 8px;
   padding: 20px;
   border-radius: 1rem;
-  border: 1px solid rgba(226, 232, 240, 0.15);
+  border: 1px solid var(--card-border);
   background: var(--card-bg);
   position: relative;
   color: inherit;
@@ -1418,9 +1438,27 @@ textarea {
   overflow: visible;
   position: relative;
 }
+
+.breakdown-wrapper {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
 .card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
   height: auto;
-  min-height: auto;
+  min-height: unset;
   max-width: 100%;
   overflow: hidden;
+}
+.breakdown-wrapper {
+  display: block;
+  width: 100%;
+  max-width: 100%;
 }

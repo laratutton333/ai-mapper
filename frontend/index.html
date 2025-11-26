@@ -21,8 +21,9 @@
       </div>
     </header>
 
-    <main class="layout" id="analysis-tool">
-      <section class="panel input-panel">
+    <main class="main-container" id="analysis-tool">
+      <div class="layout-columns">
+      <section class="panel input-panel section">
         <h2>1. Provide Content</h2>
         <p class="panel__intro">Choose an input method, add your content, and optionally set the content type and industry for more precise scoring.</p>
 
@@ -103,7 +104,7 @@
         
       </section>
 
-      <section class="panel results-panel">
+      <section class="panel results-panel section">
         <div class="results-header">
           <div>
             <h2>2. Dual-Score Results</h2>
@@ -140,7 +141,7 @@
             <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
           </div>
 
-        <div class="results-grid analysis-sections" id="resultsGrid">
+        <div class="results-grid analysis-sections result-section" id="resultsGrid">
           <article class="results-card score-card hover-card card" data-column="left" id="seoScoreCard">
             <div class="skeleton skeleton-card" id="seoScoreSkeleton">
               <div class="skeleton-line"></div>
@@ -201,7 +202,7 @@
             </div>
           </article>
 
-          <section class="results-card collapsible-card hover-card breakdown-section card" data-column="left">
+          <section class="results-card collapsible-card hover-card breakdown-section card breakdown-wrapper" data-column="left">
             <button class="collapsible-toggle" type="button" data-collapse-target="seoPillarsPanel" aria-expanded="true">
               <div class="collapsible-copy">
                 <p class="pillar-group__title label-with-icon">
@@ -222,7 +223,7 @@
             </div>
           </section>
 
-          <section class="results-card collapsible-card hover-card breakdown-section card" data-column="right">
+          <section class="results-card collapsible-card hover-card breakdown-section card breakdown-wrapper" data-column="right">
             <button class="collapsible-toggle" type="button" data-collapse-target="geoPillarsPanel" aria-expanded="true">
               <div class="collapsible-copy">
                 <p class="pillar-group__title label-with-icon">
@@ -314,6 +315,7 @@
         </div>
       </div>
       </section>
+      </div>
     </main>
 
     <div id="details-backdrop" class="details-backdrop hidden" aria-hidden="true"></div>
