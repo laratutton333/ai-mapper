@@ -24,7 +24,7 @@
     <main class="layout" id="analysis-tool">
       <section class="panel input-panel">
         <h2>1. Provide Content</h2>
-        <p class="panel__intro">Choose an input method, add the content, and optionally set the content type + industry for benchmarking.</p>
+        <p class="panel__intro">Choose an input method, add your content, and optionally set the content type and industry for more precise scoring.</p>
 
         <div class="field-group">
           <label class="field-label">Input Method</label>
@@ -38,7 +38,7 @@
         <div class="field-group" id="url-field">
           <label for="urlInput">Content URL</label>
           <input type="url" id="urlInput" placeholder="https://example.com/press-release" />
-          <p class="helper-text">Requires backend proxy for full analysis. HTTPS URLs score higher for Technical SEO.</p>
+            
         </div>
 
         <div class="field-group hidden" id="html-field">
@@ -64,7 +64,7 @@
               <option value="newsArticle">News / Editorial</option>
               <option value="howTo">How-To Guide / Tutorial</option>
             </select>
-            <p class="helper-text">Adjusts GEO weighting + recommendations.</p>
+            
           </div>
 
           <div class="field-group">
@@ -81,7 +81,7 @@
               <option value="education">Education</option>
               <option value="nonProfit">Non-Profit</option>
             </select>
-            <p class="helper-text">Compares your dual scores to industry averages.</p>
+            
           </div>
         </div>
 
@@ -98,20 +98,20 @@
           <button id="analyzeBtn" class="cta">Run AI Mapper Analysis</button>
           <button id="resetBtn" class="ghost">Reset</button>
         </div>
-        <p class="helper-text helper-text--inline">No analysis yet — enter a URL or content above to begin.</p>
+        
         <div id="loadingSpinner" class="ai-spinner hidden">
           <div class="ai-spinner__circle"></div>
         </div>
-        <p class="helper-text small">Average runtime: 3–4 seconds. Backend URL fetch required for production URLs.</p>
+        
       </section>
 
       <section class="panel results-panel">
         <div class="results-header">
           <div>
             <h2>2. Dual-Score Results</h2>
-            <p class="panel__intro">View SEO + GEO performance, pillar breakdowns, gap analysis, benchmarks, and actionable recommendations.</p>
+            <p class="panel__intro">Review combined SEO + GEO performance, breakdowns, verification checks, and benchmark insights.</p>
           </div>
-          <button id="exportBtn" class="ghost ghost--icon">
+          <button id="exportBtn" class="ghost ghost--icon hidden">
             <span>Export HTML Report</span>
             <span aria-hidden="true">↗</span>
           </button>
@@ -147,9 +147,9 @@
                 </div>
                 <p class="score-card__eyebrow">🔍 SEO Score</p>
                 <p class="score-card__value" id="seoScore">--</p>
-                <p class="score-card__desc">Technical + On-Page + Content Quality</p>
+                <p class="score-card__desc">Technical + on-page structure and content quality.</p>
               </article>
-          <article class="score-card hover-card" id="geoScoreCard">
+              <article class="score-card hover-card" id="geoScoreCard">
                 <div class="skeleton skeleton-card" id="geoScoreSkeleton">
                   <div class="skeleton-line"></div>
                   <div class="skeleton-line skeleton-line--lg"></div>
@@ -157,7 +157,7 @@
                 </div>
                 <p class="score-card__eyebrow">🧠 GEO Score</p>
                 <p class="score-card__value" id="geoScore">--</p>
-                <p class="score-card__desc">LLM Comprehension + Prompt Alignment + AI Discovery</p>
+                <p class="score-card__desc">LLM comprehension, prompt alignment, and AI discoverability.</p>
               </article>
               <article class="score-card dual">
                 <p class="score-card__eyebrow">📊 Gap Analysis</p>
@@ -170,8 +170,7 @@
               <div class="performance-card__heading">
                 <div>
                   <p class="performance-card__eyebrow">Speed Snapshot</p>
-                  <p class="performance-card__title">Lightweight fetch metrics (response time, payload size, requests, largest image).</p>
-                  <p class="speed-note">Not a full SEO or GEO performance grade.</p>
+                  <p class="performance-card__title">Basic fetch metrics based on a single request.</p>
                 </div>
                 <div class="performance-card__score">
                   <p class="score-card__value" id="performanceScoreValue">--</p>
@@ -232,12 +231,12 @@
               <h3>Industry Benchmark</h3>
               <div class="benchmark-cards">
                 <div class="benchmark-card">
-                  <p>SEO vs Avg</p>
+                  <p>SEO vs industry average</p>
                   <p class="benchmark-value" id="seoBenchmark"></p>
                   <p class="benchmark-label" id="seoBenchmarkLabel"></p>
                 </div>
                 <div class="benchmark-card">
-                  <p>GEO vs Avg</p>
+                  <p>GEO vs industry average</p>
                   <p class="benchmark-value" id="geoBenchmark"></p>
                   <p class="benchmark-label" id="geoBenchmarkLabel"></p>
                 </div>

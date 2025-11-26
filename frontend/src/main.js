@@ -107,6 +107,7 @@ toggleInputFields(state.inputType);
 initStickyHeader();
 updateStickyScores('--', '--');
 setResultsVisibility(false);
+setExportVisibility(false);
 
 function initChipGroup(fieldName, callback) {
   const group = document.querySelector(`.chip-group[data-field="${fieldName}"]`);
@@ -189,6 +190,11 @@ function setResultsVisibility(hasResults) {
   }
 }
 
+function setExportVisibility(visible) {
+  if (!elements.exportBtn) return;
+  elements.exportBtn.classList.toggle('hidden', !visible);
+}
+
 function setSkeletonVisibility(isVisible) {
   const method = isVisible ? 'add' : 'remove';
   Object.values(elements.skeletons).forEach((node) => {
@@ -251,6 +257,7 @@ async function handleAnalyze() {
     }
     if (!state.lastResult) {
       setResultsVisibility(false);
+      setExportVisibility(false);
     }
   } finally {
     setAnalysisState(false);
@@ -677,6 +684,7 @@ function renderResults(result) {
   updateBenchmarks(result);
   renderSnapshotTable(result);
   setResultsVisibility(true);
+  setExportVisibility(true);
   setSkeletonVisibility(false);
 }
 
@@ -1254,6 +1262,7 @@ function resetForm() {
   renderPerformance(null);
   renderMicrosoftChecks(null);
   setResultsVisibility(false);
+  setExportVisibility(false);
 }
 
 function exportReport() {
