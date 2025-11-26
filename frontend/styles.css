@@ -104,6 +104,7 @@ body {
   padding: 1.5rem;
   box-shadow: 0 20px 50px rgba(2, 6, 23, 0.65);
   border: 1px solid var(--border);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .panel h2 {
@@ -515,6 +516,7 @@ textarea {
   position: relative;
   overflow: hidden;
   color: inherit;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .skeleton {
@@ -645,6 +647,7 @@ textarea {
   border-radius: 1rem;
   padding: 1rem;
   background: var(--card-bg);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .pillar-card__title {
@@ -699,6 +702,7 @@ textarea {
   padding: 1rem;
   margin-bottom: 1.25rem;
   background: var(--card-bg);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .status-banner {
@@ -745,6 +749,7 @@ textarea {
   border-radius: 0.85rem;
   padding: 0.85rem;
   background: var(--card-elevated);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .benchmark-value {
@@ -797,6 +802,7 @@ textarea {
   grid-template-columns: auto 1fr;
   gap: 0.75rem;
   align-items: center;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .recommendation-item .priority {
@@ -828,6 +834,7 @@ textarea {
   padding: 1rem;
   background: var(--card-bg);
   overflow-x: auto;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .snapshot-table {
@@ -1007,5 +1014,15 @@ textarea {
   .sticky-header__cta {
     width: 100%;
     min-width: unset;
+  }
+}
+.hover-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hover-card:hover {
+    transform: translateY(-2px) scale(1.015);
+    box-shadow: 0 15px 35px rgba(255, 255, 255, 0.12);
   }
 }

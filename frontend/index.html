@@ -131,9 +131,9 @@
         </div>
 
         <div class="results-layout">
-          <div class="results-column results-column--primary">
+          <div class="results-column results-column--primary hover-card">
             <div class="scores-grid">
-              <article class="score-card" id="seoScoreCard">
+          <article class="score-card hover-card" id="seoScoreCard">
                 <div class="skeleton skeleton-card" id="seoScoreSkeleton">
                   <div class="skeleton-line"></div>
                   <div class="skeleton-line skeleton-line--lg"></div>
@@ -143,7 +143,7 @@
                 <p class="score-card__value" id="seoScore">--</p>
                 <p class="score-card__desc">Technical + On-Page + Content Quality</p>
               </article>
-              <article class="score-card" id="geoScoreCard">
+          <article class="score-card hover-card" id="geoScoreCard">
                 <div class="skeleton skeleton-card" id="geoScoreSkeleton">
                   <div class="skeleton-line"></div>
                   <div class="skeleton-line skeleton-line--lg"></div>
@@ -160,7 +160,7 @@
               </article>
             </div>
 
-            <article class="score-card performance-card" id="performancePanel">
+            <article class="score-card performance-card hover-card" id="performancePanel">
               <div class="performance-card__heading">
                 <div>
                   <p class="performance-card__eyebrow">Speed Snapshot</p>
@@ -183,7 +183,7 @@
               </div>
             </article>
 
-            <div class="pillars" id="pillarBreakdown">
+            <div class="pillars hover-card" id="pillarBreakdown">
               <section class="pillar-group">
                 <div class="pillar-group__header">
                   <p class="pillar-group__title">SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</p>
@@ -211,8 +211,8 @@
             </div>
           </div>
 
-          <div class="results-column results-column--secondary">
-            <section class="bing-card" id="bingVerification">
+          <div class="results-column results-column--secondary hover-card">
+            <section class="bing-card hover-card" id="bingVerification">
               <div class="bing-card__header">
                 <h3>Microsoft/Bing Verification</h3>
                 <p class="helper-text small">Checks for msvalidate tags, IndexNow keys, llms.txt, and Bingbot access.</p>
@@ -222,7 +222,7 @@
               </ul>
             </section>
 
-            <div class="benchmarks" id="benchmarkComparison">
+            <div class="benchmarks hover-card" id="benchmarkComparison">
               <h3>Industry Benchmark</h3>
               <div class="benchmark-cards">
                 <div class="benchmark-card">
@@ -238,7 +238,7 @@
               </div>
             </div>
 
-            <div class="recommendations">
+            <div class="recommendations hover-card">
               <div class="recommendations__header">
                 <h3>Recommendations</h3>
                 <div class="chip-group" data-field="recommendation-view">
@@ -255,12 +255,12 @@
               </div>
             </div>
 
-            <div class="type-specific" id="typeSpecificFindings">
+            <div class="type-specific hover-card" id="typeSpecificFindings">
               <h3>Content Type-Specific Findings</h3>
               <ul></ul>
             </div>
 
-            <div class="analysis-log">
+            <div class="analysis-log hover-card">
               <h3>Analysis Snapshot</h3>
               <div class="snapshot-grid" id="analysisSnapshot">
                 <p class="helper-text small">Run an analysis to view real metrics, schema detection, tone insights, and more.</p>
