@@ -43,6 +43,8 @@ const elements = {
   exportBtn: document.getElementById('exportBtn'),
   seoScore: document.getElementById('seoScore'),
   geoScore: document.getElementById('geoScore'),
+  seoStatusBadge: document.getElementById('seoScoreStatus'),
+  geoStatusBadge: document.getElementById('geoScoreStatus'),
   gapScore: document.getElementById('gapScore'),
   gapNarrative: document.getElementById('gapNarrative'),
   pillarBreakdown: document.getElementById('pillarBreakdown'),
@@ -752,6 +754,8 @@ function renderResults(result) {
   updateBenchmarks(result);
   renderSnapshotTable(result);
   setResultsVisibility(true);
+  updateStatusBadge(elements.seoStatusBadge, classifyScore(seoScore));
+  updateStatusBadge(elements.geoStatusBadge, classifyScore(geoScore));
   applyIcons(elements.resultsContainer);
   setExportVisibility(true);
   setSkeletonVisibility(false);
@@ -857,6 +861,19 @@ function setupStatusTooltip(badge, tooltip) {
   badge.addEventListener('mouseleave', hide);
   badge.addEventListener('focus', show);
   badge.addEventListener('blur', hide);
+}
+
+function updateStatusBadge(element, status) {
+  if (!element || !status) return;
+  element.textContent = status.label;
+  element.className = 'status-pill';
+  if (status.className === 'challenged') {
+    element.classList.add('status-pill--warn');
+  } else if (status.className === 'risk') {
+    element.classList.add('status-pill--fail');
+  } else {
+    element.classList.add('status-pill--pass');
+  }
 }
 
 function handleDetailsTriggerEvent(event) {

@@ -3,57 +3,59 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Earned+Owned AI Mapper</title>
+    <title>AIOMAPPER · GEO + SEO Dashboard</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header class="hero">
-      <div class="hero__content">
-        <p class="eyebrow">EARNED + OWNED INTELLIGENCE</p>
-        <h1>Level up your content for the new era of search.</h1>
-        <p class="subtitle">
-          AI Mapper scores how your content performs across Google and AI engines, uncovers the gaps, and gives you step-by-step fixes that boost visibility, authority, and discovery.
-          Trusted by communications, marketing, and content teams who need reliable visibility in AI-driven search.
-        </p>
-        <div class="hero__cta">
-          <button class="cta hero-cta" type="button" data-jump="#analysis-tool">Run an Analysis</button>
-        </div>
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="app-logo">AIOMAPPER</div>
+        <p class="nav-subtitle">Earned + Owned Intelligence</p>
+      </div>
+      <div class="nav-actions">
+        <button class="icon-button" type="button">
+          <span data-icon="sparkles" data-label="Ideas"></span>
+        </button>
+        <button class="icon-button" type="button">
+          <span data-icon="infoCircle" data-label="Info"></span>
+        </button>
+        <button class="profile-badge" type="button">LT</button>
       </div>
     </header>
 
-    <main class="main-container" id="analysis-tool">
+    <main class="app-shell" id="analysis-tool">
       <div class="layout-columns">
-      <section class="panel input-panel section">
-        <h2>1. Provide Content</h2>
-        <p class="panel__intro">Choose an input method, add your content, and optionally set the content type and industry for more precise scoring.</p>
-
-        <div class="field-group">
-          <label class="field-label">Input Method</label>
-          <div class="chip-group" data-field="input-type">
-            <button class="chip chip--active" data-value="url">URL</button>
-            <button class="chip" data-value="html">HTML</button>
-            <button class="chip" data-value="text">Text</button>
+        <aside class="sidebar">
+          <div class="sidebar-section">
+            <p class="sidebar-eyebrow">Workflow</p>
+            <h2>1. Provide Content</h2>
           </div>
-        </div>
 
-        <div class="field-group" id="url-field">
-          <label for="urlInput">Content URL</label>
-          <input type="url" id="urlInput" placeholder="https://example.com/press-release" />
-            
-        </div>
+          <div class="input-card">
+            <label class="field-label">Input Method</label>
+            <div class="chip-group" data-field="input-type">
+              <button class="chip chip--active" data-value="url">URL</button>
+              <button class="chip" data-value="html">HTML</button>
+              <button class="chip" data-value="text">Text</button>
+            </div>
+          </div>
 
-        <div class="field-group hidden" id="html-field">
-          <label for="htmlInput">Paste HTML</label>
-          <textarea id="htmlInput" rows="8" placeholder="Paste the full HTML source code here"></textarea>
-        </div>
+          <div class="input-card" id="url-field">
+            <label for="urlInput">Content URL</label>
+            <input type="url" id="urlInput" placeholder="https://example.com/press-release" />
+          </div>
 
-        <div class="field-group hidden" id="text-field">
-          <label for="textInput">Plain Text</label>
-          <textarea id="textInput" rows="8" placeholder="Paste the draft content here"></textarea>
-        </div>
+          <div class="input-card hidden" id="html-field">
+            <label for="htmlInput">Paste HTML</label>
+            <textarea id="htmlInput" rows="6" placeholder="Paste the full HTML source code here"></textarea>
+          </div>
 
-        <div class="field-inline">
-          <div class="field-group">
+          <div class="input-card hidden" id="text-field">
+            <label for="textInput">Plain Text</label>
+            <textarea id="textInput" rows="6" placeholder="Paste the draft content here"></textarea>
+          </div>
+
+          <div class="input-card">
             <label for="contentType">Content Type</label>
             <select id="contentType">
               <option value="pressRelease">Press Release</option>
@@ -63,10 +65,9 @@
               <option value="newsArticle">News / Editorial</option>
               <option value="howTo">How-To Guide / Tutorial</option>
             </select>
-            
           </div>
 
-          <div class="field-group">
+          <div class="input-card">
             <label for="industrySelect">Industry Benchmark</label>
             <select id="industrySelect">
               <option value="technology">Technology</option>
@@ -80,245 +81,271 @@
               <option value="education">Education</option>
               <option value="nonProfit">Non-Profit</option>
             </select>
-            
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">Scoring Mode</label>
-          <div class="chip-group" data-field="mode-toggle">
-            <button class="chip chip--active" data-value="dual">Dual Mode</button>
-            <button class="chip" data-value="seo">SEO Only</button>
-            <button class="chip" data-value="geo">GEO Only</button>
-          </div>
-        </div>
-
-        <div class="action-row">
-          <button id="analyzeBtn" class="cta">Run AI Mapper Analysis</button>
-          <button id="resetBtn" class="ghost">Reset</button>
-        </div>
-        
-        <div id="loadingSpinner" class="ai-spinner hidden">
-          <div class="ai-spinner__circle"></div>
-        </div>
-        
-      </section>
-
-      <section class="panel results-panel section">
-        <div class="results-header">
-          <div>
-            <h2>2. Dual-Score Results</h2>
-            <p class="panel__intro">Review combined SEO + GEO performance, breakdowns, verification checks, and benchmark insights.</p>
-          </div>
-          <button id="exportBtn" class="ghost ghost--icon hidden">
-            <span>Export HTML Report</span>
-            <span aria-hidden="true">↗</span>
-          </button>
-        </div>
-        <div id="statusBanner" class="status-banner hidden" role="status" aria-live="polite"></div>
-        <div id="empty-state" class="empty-state-card" aria-live="polite">
-          <span data-icon="sparkles" data-label="Awaiting analysis" class="empty-state__icon"></span>
-          <p class="empty-state__title">Run an analysis to view SEO + GEO breakdowns, verification checks, and insights.</p>
-        </div>
-        <div id="results-container" class="results-container">
-          <div id="stickyHeader" class="sticky-header" aria-live="polite">
-            <div class="sticky-header__scores">
-              <div class="sticky-score">
-                <p class="sticky-score__label label-with-icon">
-                  <span data-icon="search" data-label="SEO Score"></span>
-                  <span>SEO</span>
-                </p>
-                <p class="sticky-score__value" id="stickySeoScore">--</p>
-              </div>
-              <div class="sticky-score">
-                <p class="sticky-score__label label-with-icon">
-                  <span data-icon="globe" data-label="GEO Score"></span>
-                  <span>GEO</span>
-                </p>
-                <p class="sticky-score__value" id="stickyGeoScore">--</p>
-              </div>
-            </div>
-            <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
           </div>
 
-        <div class="results-grid analysis-sections result-section" id="resultsGrid">
-          <article class="results-card score-card hover-card card" data-column="left" id="seoScoreCard">
-            <div class="skeleton skeleton-card" id="seoScoreSkeleton">
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line skeleton-line--lg"></div>
-              <div class="skeleton-line skeleton-line--sm"></div>
+          <div class="input-card">
+            <label class="field-label">Scoring Mode</label>
+            <div class="chip-group" data-field="mode-toggle">
+              <button class="chip chip--active" data-value="dual">Dual Mode</button>
+              <button class="chip" data-value="seo">SEO Only</button>
+              <button class="chip" data-value="geo">GEO Only</button>
             </div>
-            <p class="score-card__eyebrow label-with-icon">
-              <span data-icon="search" data-label="SEO Score"></span>
-              <span>SEO Score</span>
-            </p>
-            <p class="score-card__value" id="seoScore">--</p>
-            <p class="score-card__desc">Technical + on-page structure and content quality.</p>
-          </article>
+          </div>
 
-          <article class="results-card score-card hover-card card" data-column="right" id="geoScoreCard">
-            <div class="skeleton skeleton-card" id="geoScoreSkeleton">
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line skeleton-line--lg"></div>
-              <div class="skeleton-line skeleton-line--sm"></div>
+          <div class="sidebar-actions">
+            <button id="analyzeBtn" class="cta full">Run AI Mapper Analysis</button>
+            <button id="resetBtn" class="ghost full">Reset</button>
+            <p class="microcopy">No analysis yet — enter a URL or content above to begin.</p>
+          </div>
+          <div id="loadingSpinner" class="ai-spinner hidden">
+            <div class="ai-spinner__circle"></div>
+          </div>
+        </aside>
+
+        <section class="main-column">
+          <div class="results-header card section">
+            <div>
+              <p class="eyebrow">Insights</p>
+              <h2>2. Dual-Score Results</h2>
+              <p class="muted">
+                Review SEO + GEO KPIs, breakdown panels, Bing validation checks, and optimization recommendations.
+              </p>
             </div>
-            <p class="score-card__eyebrow label-with-icon">
-              <span data-icon="globe" data-label="GEO Score"></span>
-              <span>GEO Score</span>
-            </p>
-            <p class="score-card__value" id="geoScore">--</p>
-            <p class="score-card__desc">LLM comprehension, prompt alignment, and AI discoverability.</p>
-          </article>
-
-          <article class="results-card score-card dual hover-card card" data-column="left">
-            <p class="score-card__eyebrow label-with-icon">
-              <span data-icon="barChart" data-label="Gap Analysis"></span>
-              <span>Gap Analysis</span>
-            </p>
-            <p class="score-card__value" id="gapScore">--</p>
-            <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
-          </article>
-
-          <article class="results-card score-card performance-card hover-card card" data-column="left" id="performancePanel">
-            <div class="performance-card__heading">
-              <div>
-                <p class="performance-card__eyebrow label-with-icon">
-                  <span data-icon="activity" data-label="Speed Snapshot"></span>
-                  <span>Speed Snapshot</span>
-                </p>
-                <p class="performance-card__title">Basic fetch metrics based on a single request.</p>
-              </div>
-              <div class="performance-card__score">
-                <p class="score-card__value" id="performanceScoreValue">--</p>
-                <span class="performance-card__total">/100</span>
-              </div>
-            </div>
-            <div class="performance-grid" id="performanceGrid"></div>
-            <div class="skeleton skeleton-metrics" id="performanceSkeleton">
-              <div class="skeleton-block"></div>
-              <div class="skeleton-block"></div>
-              <div class="skeleton-block"></div>
-              <div class="skeleton-block"></div>
-            </div>
-          </article>
-
-          <section class="results-card collapsible-card hover-card breakdown-section card breakdown-wrapper" data-column="left">
-            <button class="collapsible-toggle" type="button" data-collapse-target="seoPillarsPanel" aria-expanded="true">
-              <div class="collapsible-copy">
-                <p class="pillar-group__title label-with-icon">
-                  <span data-icon="search" data-label="SEO Breakdown"></span>
-                  <span>SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</span>
-                </p>
-                <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
-              </div>
-              <span class="collapsible-caret" aria-hidden="true"></span>
+            <button id="exportBtn" class="ghost ghost--icon hidden">
+              <span>Export HTML Report</span>
+              <span aria-hidden="true">↗</span>
             </button>
-            <div class="collapsible-panel collapsible-panel--open" id="seoPillarsPanel">
-              <div class="card-grid pillar-grid" id="seoPillars"></div>
-              <div class="pillar-skeleton" id="seoPillarsSkeleton">
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
+          </div>
+
+          <div id="statusBanner" class="status-banner hidden" role="status" aria-live="polite"></div>
+
+          <div id="empty-state" class="empty-state-card card" aria-live="polite">
+            <span data-icon="sparkles" data-label="Awaiting analysis" class="empty-state__icon"></span>
+            <p class="empty-state__title">
+              Run an analysis to view SEO + GEO breakdowns, verification checks, and insights.
+            </p>
+          </div>
+
+          <div id="results-container" class="results-container">
+            <div id="stickyHeader" class="sticky-header" aria-live="polite">
+              <div class="sticky-header__scores">
+                <div class="sticky-score">
+                  <p class="sticky-score__label label-with-icon">
+                    <span data-icon="search" data-label="SEO Score"></span>
+                    <span>SEO</span>
+                  </p>
+                  <p class="sticky-score__value" id="stickySeoScore">--</p>
+                </div>
+                <div class="sticky-score">
+                  <p class="sticky-score__label label-with-icon">
+                    <span data-icon="globe" data-label="GEO Score"></span>
+                    <span>GEO</span>
+                  </p>
+                  <p class="sticky-score__value" id="stickyGeoScore">--</p>
+                </div>
+              </div>
+              <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
+            </div>
+
+            <div class="core-metrics-grid card">
+              <article class="results-card score-card hover-card card compact" id="seoScoreCard">
+                <div class="score-card__top">
+                  <p class="score-card__eyebrow label-with-icon">
+                    <span data-icon="search" data-label="SEO Score"></span>
+                    <span>SEO Score</span>
+                  </p>
+                  <span class="status-pill status-pill--neutral" id="seoScoreStatus">--</span>
+                </div>
+                <div class="skeleton skeleton-card" id="seoScoreSkeleton">
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton-line skeleton-line--sm"></div>
+                </div>
+                <p class="score-card__value" id="seoScore">--</p>
+                <p class="score-card__desc">Technical + on-page structure and content quality.</p>
+              </article>
+
+              <article class="results-card score-card hover-card card compact" id="geoScoreCard">
+                <div class="score-card__top">
+                  <p class="score-card__eyebrow label-with-icon">
+                    <span data-icon="globe" data-label="GEO Score"></span>
+                    <span>GEO Score</span>
+                  </p>
+                  <span class="status-pill status-pill--neutral" id="geoScoreStatus">--</span>
+                </div>
+                <div class="skeleton skeleton-card" id="geoScoreSkeleton">
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton-line skeleton-line--sm"></div>
+                </div>
+                <p class="score-card__value" id="geoScore">--</p>
+                <p class="score-card__desc">LLM comprehension, prompt alignment, and AI discoverability.</p>
+              </article>
+
+              <article class="results-card score-card hover-card card compact">
+                <div class="score-card__top">
+                  <p class="score-card__eyebrow label-with-icon">
+                    <span data-icon="barChart" data-label="Gap Analysis"></span>
+                    <span>Gap Analysis</span>
+                  </p>
+                </div>
+                <p class="score-card__value" id="gapScore">--</p>
+                <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
+              </article>
+
+              <article class="results-card score-card hover-card card compact">
+                <div class="score-card__top">
+                  <p class="score-card__eyebrow label-with-icon">
+                    <span data-icon="activity" data-label="Speed Snapshot"></span>
+                    <span>Speed Snapshot</span>
+                  </p>
+                </div>
+                <div class="performance-meta">
+                  <p class="score-card__value" id="performanceScoreValue">--</p>
+                  <span class="performance-card__total">/100</span>
+                </div>
+                <p class="score-card__desc">Basic fetch metrics based on a single request.</p>
+              </article>
+            </div>
+
+            <section class="panel breakdown-panel card breakdown-wrapper">
+              <button class="collapsible-toggle" type="button" data-collapse-target="seoPillarsPanel" aria-expanded="true">
+                <div class="collapsible-copy">
+                  <p class="pillar-group__title label-with-icon">
+                    <span data-icon="search" data-label="SEO Breakdown"></span>
+                    <span>SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</span>
+                  </p>
+                  <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
+                </div>
+                <span class="collapsible-caret" aria-hidden="true"></span>
+              </button>
+              <div class="collapsible-panel collapsible-panel--open" id="seoPillarsPanel">
+                <div class="card-grid pillar-grid" id="seoPillars"></div>
+                <div class="pillar-skeleton" id="seoPillarsSkeleton">
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel breakdown-panel card breakdown-wrapper">
+              <button class="collapsible-toggle" type="button" data-collapse-target="geoPillarsPanel" aria-expanded="true">
+                <div class="collapsible-copy">
+                  <p class="pillar-group__title label-with-icon">
+                    <span data-icon="globe" data-label="GEO Breakdown"></span>
+                    <span>GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</span>
+                  </p>
+                  <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
+                </div>
+                <span class="collapsible-caret" aria-hidden="true"></span>
+              </button>
+              <div class="collapsible-panel collapsible-panel--open" id="geoPillarsPanel">
+                <div class="card-grid pillar-grid" id="geoPillars"></div>
+                <div class="pillar-skeleton" id="geoPillarsSkeleton">
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                </div>
+              </div>
+            </section>
+
+            <div class="result-section">
+              <section class="results-card bing-card hover-card card" id="bingVerification">
+                <div class="bing-card__header label-with-icon">
+                  <span data-icon="shieldCheck" data-label="Microsoft and Bing Verification"></span>
+                  <h3>Microsoft/Bing Verification</h3>
+                </div>
+                <ul class="bing-checks-list" id="bingChecksList"></ul>
+              </section>
+
+              <div class="results-card benchmarks hover-card card" id="benchmarkComparison">
+                <h3 class="label-with-icon">
+                  <span data-icon="lineChart" data-label="Industry Benchmark"></span>
+                  <span>Industry Benchmark</span>
+                </h3>
+                <div class="benchmark-cards">
+                  <div class="benchmark-card">
+                    <p>SEO vs industry average</p>
+                    <p class="benchmark-value" id="seoBenchmark"></p>
+                    <p class="benchmark-label" id="seoBenchmarkLabel"></p>
+                  </div>
+                  <div class="benchmark-card">
+                    <p>GEO vs industry average</p>
+                    <p class="benchmark-value" id="geoBenchmark"></p>
+                    <p class="benchmark-label" id="geoBenchmarkLabel"></p>
+                  </div>
+                </div>
               </div>
             </div>
-          </section>
 
-          <section class="results-card collapsible-card hover-card breakdown-section card breakdown-wrapper" data-column="right">
-            <button class="collapsible-toggle" type="button" data-collapse-target="geoPillarsPanel" aria-expanded="true">
-              <div class="collapsible-copy">
-                <p class="pillar-group__title label-with-icon">
-                  <span data-icon="globe" data-label="GEO Breakdown"></span>
-                  <span>GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</span>
-                </p>
-                <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
+            <div class="result-section">
+              <div class="results-card recommendations hover-card card">
+                <div class="recommendations__header">
+                  <h3 class="label-with-icon">
+                    <span data-icon="list" data-label="Recommendations"></span>
+                    <span>Recommendations</span>
+                  </h3>
+                  <div class="chip-group" data-field="recommendation-view">
+                    <button class="chip chip--active" data-value="combined">Combined</button>
+                    <button class="chip" data-value="seo">SEO</button>
+                    <button class="chip" data-value="geo">GEO</button>
+                  </div>
+                </div>
+                <ul class="recommendation-list" id="recommendationList"></ul>
+                <div class="skeleton skeleton-list" id="recommendationsSkeleton">
+                  <div class="skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line"></div>
+                </div>
               </div>
-              <span class="collapsible-caret" aria-hidden="true"></span>
-            </button>
-            <div class="collapsible-panel collapsible-panel--open" id="geoPillarsPanel">
-              <div class="card-grid pillar-grid" id="geoPillars"></div>
-              <div class="pillar-skeleton" id="geoPillarsSkeleton">
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
+
+              <div class="results-card type-specific hover-card card" id="typeSpecificFindings">
+                <h3 class="label-with-icon">
+                  <span data-icon="pin" data-label="Content Type Findings"></span>
+                  <span>Content Type-Specific Findings</span>
+                </h3>
+                <ul></ul>
               </div>
             </div>
-          </section>
 
-          <section class="results-card bing-card hover-card card" data-column="right" id="bingVerification">
-            <div class="bing-card__header label-with-icon">
-              <span data-icon="shieldCheck" data-label="Microsoft and Bing Verification"></span>
-              <h3>Microsoft/Bing Verification</h3>
-            </div>
-            <ul class="bing-checks-list" id="bingChecksList"></ul>
-          </section>
-
-          <div class="results-card benchmarks hover-card card" data-column="right" id="benchmarkComparison">
-            <h3 class="label-with-icon">
-              <span data-icon="lineChart" data-label="Industry Benchmark"></span>
-              <span>Industry Benchmark</span>
-            </h3>
-            <div class="benchmark-cards">
-              <div class="benchmark-card">
-                <p>SEO vs industry average</p>
-                <p class="benchmark-value" id="seoBenchmark"></p>
-                <p class="benchmark-label" id="seoBenchmarkLabel"></p>
-              </div>
-              <div class="benchmark-card">
-                <p>GEO vs industry average</p>
-                <p class="benchmark-value" id="geoBenchmark"></p>
-                <p class="benchmark-label" id="geoBenchmarkLabel"></p>
+            <div class="result-section">
+              <div class="results-card analysis-log hover-card card">
+                <h3 class="label-with-icon">
+                  <span data-icon="table" data-label="Analysis Snapshot"></span>
+                  <span>Analysis Snapshot</span>
+                </h3>
+                <div class="snapshot-grid" id="analysisSnapshot"></div>
+                <div class="skeleton skeleton-table" id="snapshotSkeleton">
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line"></div>
+                </div>
               </div>
             </div>
           </div>
-
-          <div class="results-card recommendations hover-card card" data-column="right">
-            <div class="recommendations__header">
-              <h3 class="label-with-icon">
-                <span data-icon="list" data-label="Recommendations"></span>
-                <span>Recommendations</span>
-              </h3>
-              <div class="chip-group" data-field="recommendation-view">
-                <button class="chip chip--active" data-value="combined">Combined</button>
-                <button class="chip" data-value="seo">SEO</button>
-                <button class="chip" data-value="geo">GEO</button>
-              </div>
-            </div>
-            <ul class="recommendation-list" id="recommendationList"></ul>
-            <div class="skeleton skeleton-list" id="recommendationsSkeleton">
-              <div class="skeleton-line skeleton-line--lg"></div>
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line"></div>
-            </div>
-          </div>
-
-          <div class="results-card type-specific hover-card card" data-column="right" id="typeSpecificFindings">
-            <h3 class="label-with-icon">
-              <span data-icon="pin" data-label="Content Type Findings"></span>
-              <span>Content Type-Specific Findings</span>
-            </h3>
-            <ul></ul>
-          </div>
-
-          <div class="results-card analysis-log hover-card card" data-column="right">
-            <h3 class="label-with-icon">
-              <span data-icon="table" data-label="Analysis Snapshot"></span>
-              <span>Analysis Snapshot</span>
-            </h3>
-            <div class="snapshot-grid" id="analysisSnapshot"></div>
-            <div class="skeleton skeleton-table" id="snapshotSkeleton">
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      </section>
+        </section>
       </div>
     </main>
 
-    <div id="details-backdrop" class="details-backdrop hidden" aria-hidden="true"></div>
+    <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-hidden="true">
+      <div class="spinner" role="status"></div>
+      <p>Running AI Mapper analysis…</p>
+    </div>
+
+    <div class="modal" id="subscriptionModal">
+      <div class="modal__dialog">
+        <button class="modal__close" type="button" aria-label="Close" data-close-modal>&times;</button>
+        <p class="modal__eyebrow">Free analysis used</p>
+        <h3>Subscribe to continue running AI Mapper.</h3>
+        <p class="modal__body">
+          You’ve reached the free limit. Unlock unlimited analyses, report exports, and benchmarking by choosing a plan.
+        </p>
+        <a class="cta modal__cta" href="https://example.com/pricing" target="_blank" rel="noreferrer">Choose a plan</a>
+      </div>
+    </div>
+
     <aside
       id="details-panel"
       class="details-panel hidden"
@@ -334,32 +361,14 @@
           <p class="details-panel__eyebrow">Category Details</p>
           <h3 id="detailsPanelTitle">Category</h3>
         </div>
-        <button id="detailsPanelCloseBtn" class="details-panel__close" type="button" aria-label="Close details panel">&times;</button>
+        <button id="detailsPanelCloseBtn" class="details-panel__close" type="button" aria-label="Close details panel">
+          &times;
+        </button>
       </div>
       <p id="detailsPanelSummary" class="details-panel__summary"></p>
       <div class="details-panel__body" id="detailsPanelBody"></div>
     </aside>
-
-    <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-hidden="true">
-      <div class="spinner" role="status"></div>
-      <p>Running AI Mapper analysis…</p>
-    </div>
-
-    <footer class="site-footer">
-      <p>Earned+Owned AI Mapper · Dual-mode SEO + GEO analysis · MVP v3.0</p>
-    </footer>
-
-    <div class="modal" id="subscriptionModal">
-      <div class="modal__dialog">
-        <button class="modal__close" type="button" aria-label="Close" data-close-modal>&times;</button>
-        <p class="modal__eyebrow">Free analysis used</p>
-        <h3>Subscribe to continue running AI Mapper.</h3>
-        <p class="modal__body">
-          You’ve reached the free limit. Unlock unlimited analyses, report exports, and benchmarking by choosing a plan.
-        </p>
-        <a class="cta modal__cta" href="https://example.com/pricing" target="_blank" rel="noreferrer">Choose a plan</a>
-      </div>
-    </div>
+    <div id="details-backdrop" class="details-backdrop hidden" aria-hidden="true"></div>
 
     <script>
       window.AI_MAPPER_API_URL = 'https://ai-mapper-backend.vercel.app';
