@@ -11,11 +11,18 @@ const state = {
   mode: 'dual',
   recommendationView: 'combined',
   lastResult: null,
+  activeDetailsId: null,
+  activeDetailsTrigger: null,
 };
 
 const COLLAPSE_DESKTOP_BREAKPOINT = 1280;
 let collapsibleToggles = [];
 let collapseMode = null;
+let supportsHover = window.matchMedia('(hover: hover)').matches;
+const hoverMediaQuery = window.matchMedia('(hover: hover)');
+hoverMediaQuery.addEventListener('change', (event) => {
+  supportsHover = event.matches;
+});
 
 const elements = {
   urlField: document.getElementById('url-field'),
@@ -57,6 +64,12 @@ const elements = {
   resultsPanel: document.querySelector('.results-panel'),
   emptyState: document.getElementById('empty-state'),
   resultsContainer: document.getElementById('results-container'),
+  detailsPanel: document.querySelector('#pillarDetailsOverlay .details-panel'),
+  detailsOverlay: document.getElementById('pillarDetailsOverlay'),
+  detailsPanelTitle: document.getElementById('detailsPanelTitle'),
+  detailsPanelSummary: document.getElementById('detailsPanelSummary'),
+  detailsPanelBody: document.getElementById('detailsPanelBody'),
+  detailsPanelCloseBtn: document.getElementById('detailsPanelCloseBtn'),
   skeletons: {
     seoScore: document.getElementById('seoScoreSkeleton'),
     geoScore: document.getElementById('geoScoreSkeleton'),
@@ -111,6 +124,7 @@ subscriptionModal?.addEventListener('click', (event) => {
 toggleInputFields(state.inputType);
 initStickyHeader();
 initCollapsibleControls();
+initDetailsOverlay();
 updateStickyScores('--', '--');
 setResultsVisibility(false);
 setExportVisibility(false);
@@ -217,6 +231,21 @@ function handleCollapsibleResize(force = false) {
   collapsibleToggles.forEach((toggle) => {
     toggle.classList.toggle('collapsible-toggle--locked', isDesktop);
     toggleCollapsible(toggle, isDesktop);
+  });
+}
+
+function initDetailsOverlay() {
+  if (!elements.detailsOverlay) return;
+  elements.detailsPanelCloseBtn?.addEventListener('click', () => closeDetailsPanel());
+  elements.detailsOverlay.addEventListener('click', (event) => {
+    if (event.target === elements.detailsOverlay) {
+      closeDetailsPanel();
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeDetailsPanel();
+    }
   });
 }
 
@@ -692,6 +721,7 @@ function inferOwnedDomain(url = '', doc) {
 
 /* RENDERING ---------------------------------------------------------------- */
 function renderResults(result) {
+  closeDetailsPanel({ silent: true });
   const {
     seoScore,
     geoScore,
@@ -750,24 +780,137 @@ function renderPillarSection(container, list = []) {
   }
   list.forEach((pillar) => {
     const status = classifyScore(pillar.score);
-    const listItems = pillar.notes
-      .map((note) => `<li><span>${note}</span></li>`)
-      .join('');
+    const detailsId = `pillar-details-${pillar.id}`;
     const card = document.createElement('article');
-    card.className = 'pillar-card';
-    card.innerHTML = `
-      <div class="pillar-card__title">
-        <div>
-          <p class="score-card__eyebrow">${pillar.label}</p>
-          <p class="pillar-card__score">${Math.round(pillar.score)}</p>
-        </div>
-        <span class="chip chip--status ${status.className}">${status.label}</span>
-      </div>
-      <p class="panel__intro">${pillar.description}</p>
-      <ul class="pillar-points">${listItems}</ul>
+    card.className = 'pillar-card hover-card';
+    card.dataset.pillarId = pillar.id;
+
+    const header = document.createElement('div');
+    header.className = 'pillar-card__header';
+
+    const title = document.createElement('h3');
+    title.textContent = pillar.label;
+
+    const statusWrapper = document.createElement('div');
+    statusWrapper.className = 'pillar-card__status';
+
+    const badge = document.createElement('span');
+    badge.className = `chip chip--status ${status.className}`.trim();
+    badge.textContent = status.label;
+    badge.tabIndex = 0;
+    badge.setAttribute('role', 'status');
+    badge.setAttribute('aria-label', `${pillar.label} status: ${status.label}`);
+
+    const detailsButton = document.createElement('button');
+    detailsButton.className = 'details-pill';
+    detailsButton.type = 'button';
+    detailsButton.dataset.detailsTarget = detailsId;
+    detailsButton.dataset.pillarName = pillar.label;
+    detailsButton.dataset.pillarSummary = pillar.description;
+    detailsButton.setAttribute('aria-expanded', 'false');
+    detailsButton.setAttribute('aria-controls', 'pillarDetailsOverlay');
+    detailsButton.textContent = 'View Details';
+
+    statusWrapper.append(badge, detailsButton);
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'status-tooltip';
+    tooltip.innerHTML = `
+      <p>${status.message}</p>
+      <button type="button" class="status-tooltip__link" data-details-target="${detailsId}" data-pillar-name="${pillar.label}" data-pillar-summary="${pillar.description}">
+        View Full Details →
+      </button>
     `;
+    statusWrapper.appendChild(tooltip);
+
+    header.append(title, statusWrapper);
+
+    const scoreWrap = document.createElement('div');
+    scoreWrap.className = 'pillar-card__score-wrap';
+    const scoreValue = document.createElement('p');
+    scoreValue.className = 'pillar-card__score';
+    scoreValue.textContent = Number.isFinite(pillar.score) ? `${Math.round(pillar.score)}` : '--';
+    const summary = document.createElement('p');
+    summary.className = 'pillar-card__summary';
+    summary.textContent = pillar.description;
+    scoreWrap.append(scoreValue, summary);
+
+    const detailsContent = document.createElement('div');
+    detailsContent.className = 'pillar-details-data';
+    detailsContent.id = detailsId;
+    detailsContent.hidden = true;
+    const detailsList =
+      pillar.notes && pillar.notes.length
+        ? pillar.notes.map((note) => `<li>${note}</li>`).join('')
+        : '<li>No checks evaluated.</li>';
+    detailsContent.innerHTML = `<ul class="pillar-details-list">${detailsList}</ul>`;
+
+    card.append(header, scoreWrap, detailsContent);
     container.appendChild(card);
+
+    const tooltipLink = tooltip.querySelector('button');
+    setupStatusTooltip(badge, tooltip);
+    attachDetailsTrigger(detailsButton);
+    attachDetailsTrigger(tooltipLink);
   });
+}
+
+function attachDetailsTrigger(trigger) {
+  if (!trigger) return;
+  trigger.addEventListener('click', () => {
+    const detailsId = trigger.dataset.detailsTarget;
+    if (!detailsId) return;
+    openDetailsPanel(detailsId, trigger.dataset.pillarName, trigger.dataset.pillarSummary, trigger);
+  });
+}
+
+function setupStatusTooltip(badge, tooltip) {
+  if (!badge || !tooltip || !supportsHover) return;
+  const show = () => tooltip.classList.add('status-tooltip--visible');
+  const hide = () => tooltip.classList.remove('status-tooltip--visible');
+  badge.addEventListener('mouseenter', show);
+  badge.addEventListener('mouseleave', hide);
+  badge.addEventListener('focus', show);
+  badge.addEventListener('blur', hide);
+}
+
+function openDetailsPanel(detailsId, title, summary, trigger) {
+  if (!elements.detailsOverlay || !detailsId) return;
+  if (!elements.detailsOverlay.hasAttribute('hidden')) {
+    closeDetailsPanel({ silent: true });
+  }
+  const source = document.getElementById(detailsId);
+  if (!source) return;
+  elements.detailsPanelBody.innerHTML = source.innerHTML;
+  elements.detailsPanelTitle.textContent = title || 'Details';
+  elements.detailsPanelSummary.textContent = summary || '';
+  elements.detailsOverlay.removeAttribute('hidden');
+  elements.detailsOverlay.setAttribute('aria-hidden', 'false');
+  elements.detailsPanelBody.scrollTop = 0;
+  elements.detailsPanel?.focus();
+  state.activeDetailsId = detailsId;
+  state.activeDetailsTrigger = trigger ?? null;
+  if (trigger) {
+    trigger.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function closeDetailsPanel(options = {}) {
+  if (!elements.detailsOverlay) return;
+  const wasOpen = !elements.detailsOverlay.hasAttribute('hidden');
+  if (wasOpen) {
+    elements.detailsOverlay.setAttribute('hidden', 'hidden');
+    elements.detailsOverlay.setAttribute('aria-hidden', 'true');
+    elements.detailsPanelBody.innerHTML = '';
+  }
+  if (state.activeDetailsTrigger) {
+    state.activeDetailsTrigger.setAttribute('aria-expanded', 'false');
+    if (!options.silent && wasOpen) {
+      state.activeDetailsTrigger.focus();
+    }
+  }
+  state.activeDetailsId = null;
+  state.activeDetailsTrigger = null;
 }
 
 function renderRecommendations(recommendations) {
@@ -1287,12 +1430,29 @@ function formatBingChecksForExport(checks) {
 }
 
 function classifyScore(score) {
-  if (score >= 80) return { label: 'Strong', className: '' };
-  if (score >= 60) return { label: 'Watch', className: 'challenged' };
-  return { label: 'Risk', className: 'risk' };
+  if (score >= 80) {
+    return {
+      label: 'Strong',
+      className: '',
+      message: 'Signals meet or exceed GEO expectations. Keep reinforcing this pillar.',
+    };
+  }
+  if (score >= 60) {
+    return {
+      label: 'Watch',
+      className: 'challenged',
+      message: 'Mixed execution. Address highlighted checks before the gap widens.',
+    };
+  }
+  return {
+    label: 'Risk',
+    className: 'risk',
+    message: 'Critical deficiencies reduce discoverability. Prioritize fixes immediately.',
+  };
 }
 
 function resetForm() {
+  closeDetailsPanel({ silent: true });
   elements.urlInput.value = '';
   elements.htmlInput.value = '';
   elements.textInput.value = '';
