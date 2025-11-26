@@ -50,6 +50,8 @@ const elements = {
   bingChecks: document.getElementById('bingChecksList'),
   inputPanel: document.querySelector('.input-panel'),
   resultsPanel: document.querySelector('.results-panel'),
+  emptyState: document.getElementById('empty-state'),
+  resultsContainer: document.getElementById('results-container'),
   skeletons: {
     seoScore: document.getElementById('seoScoreSkeleton'),
     geoScore: document.getElementById('geoScoreSkeleton'),
@@ -104,6 +106,7 @@ subscriptionModal?.addEventListener('click', (event) => {
 toggleInputFields(state.inputType);
 initStickyHeader();
 updateStickyScores('--', '--');
+setResultsVisibility(false);
 
 function initChipGroup(fieldName, callback) {
   const group = document.querySelector(`.chip-group[data-field="${fieldName}"]`);
@@ -175,6 +178,17 @@ function updateStickyScores(seoScore, geoScore) {
   elements.stickyGeoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
 }
 
+function setResultsVisibility(hasResults) {
+  if (!elements.resultsContainer || !elements.emptyState) return;
+  if (hasResults) {
+    elements.resultsContainer.classList.add('results-container--visible');
+    elements.emptyState.classList.add('hidden');
+  } else {
+    elements.resultsContainer.classList.remove('results-container--visible');
+    elements.emptyState.classList.remove('hidden');
+  }
+}
+
 function setSkeletonVisibility(isVisible) {
   const method = isVisible ? 'add' : 'remove';
   Object.values(elements.skeletons).forEach((node) => {
@@ -198,6 +212,7 @@ async function handleAnalyze() {
 
   try {
     setAnalysisState(true);
+    setResultsVisibility(true);
     setSkeletonVisibility(true);
     const payload = buildAnalysisPayload(ctx);
     const fetched = await runAnalysis(payload);
@@ -233,6 +248,9 @@ async function handleAnalyze() {
       const friendly = error.message ?? 'Unable to analyze content.';
       showStatus(friendly, 'error');
       updateSnapshot(`Unable to analyze content.\nReason: ${friendly}`);
+    }
+    if (!state.lastResult) {
+      setResultsVisibility(false);
     }
   } finally {
     setAnalysisState(false);
@@ -658,6 +676,7 @@ function renderResults(result) {
   renderMicrosoftChecks(microsoftBingChecks);
   updateBenchmarks(result);
   renderSnapshotTable(result);
+  setResultsVisibility(true);
   setSkeletonVisibility(false);
 }
 
@@ -1234,6 +1253,7 @@ function resetForm() {
   if (elements.geoBreakdownScore) elements.geoBreakdownScore.textContent = '--';
   renderPerformance(null);
   renderMicrosoftChecks(null);
+  setResultsVisibility(false);
 }
 
 function exportReport() {

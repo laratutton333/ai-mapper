@@ -98,6 +98,7 @@
           <button id="analyzeBtn" class="cta">Run AI Mapper Analysis</button>
           <button id="resetBtn" class="ghost">Reset</button>
         </div>
+        <p class="helper-text helper-text--inline">No analysis yet — enter a URL or content above to begin.</p>
         <div id="loadingSpinner" class="ai-spinner hidden">
           <div class="ai-spinner__circle"></div>
         </div>
@@ -116,27 +117,32 @@
           </button>
         </div>
         <div id="statusBanner" class="status-banner hidden" role="status" aria-live="polite"></div>
-        <div id="stickyHeader" class="sticky-header" aria-live="polite">
-          <div class="sticky-header__scores">
-            <div class="sticky-score">
-              <p class="sticky-score__label">SEO</p>
-              <p class="sticky-score__value" id="stickySeoScore">--</p>
-            </div>
-            <div class="sticky-score">
-              <p class="sticky-score__label">GEO</p>
-              <p class="sticky-score__value" id="stickyGeoScore">--</p>
-            </div>
-          </div>
-          <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
+        <div id="empty-state" class="empty-state-card" aria-live="polite">
+          <span class="empty-state__icon">✨</span>
+          <p class="empty-state__title">Run an analysis to view SEO + GEO breakdowns, verification checks, and insights.</p>
         </div>
+        <div id="results-container" class="results-container">
+          <div id="stickyHeader" class="sticky-header" aria-live="polite">
+            <div class="sticky-header__scores">
+              <div class="sticky-score">
+                <p class="sticky-score__label">SEO</p>
+                <p class="sticky-score__value" id="stickySeoScore">--</p>
+              </div>
+              <div class="sticky-score">
+                <p class="sticky-score__label">GEO</p>
+                <p class="sticky-score__value" id="stickyGeoScore">--</p>
+              </div>
+            </div>
+            <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
+          </div>
 
-        <div class="results-layout">
-          <div class="results-column results-column--primary hover-card">
-            <div class="scores-grid">
-          <article class="score-card hover-card" id="seoScoreCard">
-                <div class="skeleton skeleton-card" id="seoScoreSkeleton">
-                  <div class="skeleton-line"></div>
-                  <div class="skeleton-line skeleton-line--lg"></div>
+          <div class="results-layout">
+            <div class="results-column results-column--primary">
+              <div class="scores-grid">
+                <article class="score-card hover-card" id="seoScoreCard">
+                  <div class="skeleton skeleton-card" id="seoScoreSkeleton">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line skeleton-line--lg"></div>
                   <div class="skeleton-line skeleton-line--sm"></div>
                 </div>
                 <p class="score-card__eyebrow">🔍 SEO Score</p>
@@ -208,13 +214,13 @@
                   <div class="skeleton skeleton-card"></div>
                 </div>
               </section>
+              </div>
             </div>
-          </div>
 
-          <div class="results-column results-column--secondary hover-card">
-            <section class="bing-card hover-card" id="bingVerification">
-              <div class="bing-card__header">
-                <h3>Microsoft/Bing Verification</h3>
+            <div class="results-column results-column--secondary">
+              <section class="bing-card hover-card" id="bingVerification">
+                <div class="bing-card__header">
+                  <h3>Microsoft/Bing Verification</h3>
                 <p class="helper-text small">Checks for msvalidate tags, IndexNow keys, llms.txt, and Bingbot access.</p>
               </div>
               <ul class="bing-checks-list" id="bingChecksList">

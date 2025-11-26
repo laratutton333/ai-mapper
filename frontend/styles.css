@@ -162,6 +162,11 @@ textarea {
   font-size: 0.75rem;
 }
 
+.helper-text--inline {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+
 .chip-group {
   display: flex;
   flex-wrap: wrap;
@@ -234,6 +239,53 @@ textarea {
   color: #ffffff;
   letter-spacing: 0.01em;
   font-size: 1.15rem;
+}
+
+.empty-state-card {
+  margin-top: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.12);
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.75);
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 25px 60px rgba(2, 6, 23, 0.45);
+}
+
+.empty-state__icon {
+  font-size: 1.75rem;
+  opacity: 0.8;
+}
+
+.empty-state__title {
+  margin: 0;
+  font-size: 1rem;
+  color: #ffffff;
+  max-width: 520px;
+}
+
+.results-container {
+  display: none;
+}
+
+.results-container.results-container--visible {
+  display: block;
+  animation: resultsFadeIn 0.4s ease;
+}
+
+@keyframes resultsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .results-column > *:not(:first-child) {
