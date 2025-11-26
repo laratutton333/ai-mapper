@@ -823,7 +823,7 @@ function renderPillarSection(container, list = []) {
     header.append(title, statusWrapper);
 
     const scoreWrap = document.createElement('div');
-    scoreWrap.className = 'pillar-card__score-wrap';
+    scoreWrap.className = 'pillar-card__score-wrap card-content';
     const scoreValue = document.createElement('p');
     scoreValue.className = 'pillar-card__score pillar-score';
     scoreValue.textContent = Number.isFinite(pillar.score) ? `${Math.round(pillar.score)}` : '--';

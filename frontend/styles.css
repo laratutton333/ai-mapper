@@ -744,25 +744,26 @@ textarea {
   font-size: 0.9rem;
 }
 
-.pillar-grid {
+.card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.25rem;
+  gap: 1.5rem;
   align-items: start;
 }
 
 .pillar-card {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   background: var(--card-bg);
   padding: 1.25rem;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  min-height: 220px;
+  min-height: auto;
+  height: auto;
+  flex: 0 0 auto;
   max-width: 100%;
   overflow: hidden;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .pillar-card__header {
@@ -799,10 +800,13 @@ textarea {
   opacity: 0.75;
 }
 
-.pillar-card__score-wrap {
+.pillar-card__score-wrap,
+.card-content {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  max-width: 420px;
+  width: 100%;
 }
 
 .chip--status {
