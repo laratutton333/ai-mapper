@@ -44,13 +44,11 @@
         <div class="field-group hidden" id="html-field">
           <label for="htmlInput">Paste HTML</label>
           <textarea id="htmlInput" rows="8" placeholder="Paste the full HTML source code here"></textarea>
-          <p class="helper-text">Includes schema + metadata checks. Ideal for QA before publishing.</p>
         </div>
 
         <div class="field-group hidden" id="text-field">
           <label for="textInput">Plain Text</label>
           <textarea id="textInput" rows="8" placeholder="Paste the draft content here"></textarea>
-          <p class="helper-text">Focuses on content quality + GEO factors. Technical SEO pillars use baseline estimations.</p>
         </div>
 
         <div class="field-inline">
@@ -136,146 +134,144 @@
             <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
           </div>
 
-          <div class="results-layout">
-            <div class="results-column results-column--primary">
-              <div class="scores-grid">
-                <article class="score-card hover-card" id="seoScoreCard">
-                  <div class="skeleton skeleton-card" id="seoScoreSkeleton">
-                    <div class="skeleton-line"></div>
-                    <div class="skeleton-line skeleton-line--lg"></div>
-                  <div class="skeleton-line skeleton-line--sm"></div>
-                </div>
-                <p class="score-card__eyebrow">🔍 SEO Score</p>
-                <p class="score-card__value" id="seoScore">--</p>
-                <p class="score-card__desc">Technical + on-page structure and content quality.</p>
-              </article>
-              <article class="score-card hover-card" id="geoScoreCard">
-                <div class="skeleton skeleton-card" id="geoScoreSkeleton">
-                  <div class="skeleton-line"></div>
-                  <div class="skeleton-line skeleton-line--lg"></div>
-                  <div class="skeleton-line skeleton-line--sm"></div>
-                </div>
-                <p class="score-card__eyebrow">🧠 GEO Score</p>
-                <p class="score-card__value" id="geoScore">--</p>
-                <p class="score-card__desc">LLM comprehension, prompt alignment, and AI discoverability.</p>
-              </article>
-              <article class="score-card dual">
-                <p class="score-card__eyebrow">📊 Gap Analysis</p>
-                <p class="score-card__value" id="gapScore">--</p>
-                <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
-              </article>
+        <div class="results-grid" id="resultsGrid">
+          <article class="results-card score-card hover-card" data-column="left" id="seoScoreCard">
+            <div class="skeleton skeleton-card" id="seoScoreSkeleton">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line skeleton-line--sm"></div>
             </div>
+            <p class="score-card__eyebrow">🔍 SEO Score</p>
+            <p class="score-card__value" id="seoScore">--</p>
+            <p class="score-card__desc">Technical + on-page structure and content quality.</p>
+          </article>
 
-            <article class="score-card performance-card hover-card" id="performancePanel">
-              <div class="performance-card__heading">
-                <div>
-                  <p class="performance-card__eyebrow">Speed Snapshot</p>
-                  <p class="performance-card__title">Basic fetch metrics based on a single request.</p>
-                </div>
-                <div class="performance-card__score">
-                  <p class="score-card__value" id="performanceScoreValue">--</p>
-                  <span class="performance-card__total">/100</span>
-                </div>
-              </div>
-              <div class="performance-grid" id="performanceGrid">
-                <p class="helper-text small">Run a URL analysis to view live response time, payload size, and request counts.</p>
-              </div>
-              <div class="skeleton skeleton-metrics" id="performanceSkeleton">
-                <div class="skeleton-block"></div>
-                <div class="skeleton-block"></div>
-                <div class="skeleton-block"></div>
-                <div class="skeleton-block"></div>
-              </div>
-            </article>
+          <article class="results-card score-card hover-card" data-column="right" id="geoScoreCard">
+            <div class="skeleton skeleton-card" id="geoScoreSkeleton">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line skeleton-line--sm"></div>
+            </div>
+            <p class="score-card__eyebrow">🧠 GEO Score</p>
+            <p class="score-card__value" id="geoScore">--</p>
+            <p class="score-card__desc">LLM comprehension, prompt alignment, and AI discoverability.</p>
+          </article>
 
-            <div class="pillars hover-card" id="pillarBreakdown">
-              <section class="pillar-group">
-                <div class="pillar-group__header">
-                  <p class="pillar-group__title">SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</p>
-                  <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
-                </div>
-                <div class="pillar-grid" id="seoPillars"></div>
-                <div class="pillar-skeleton" id="seoPillarsSkeleton">
-                  <div class="skeleton skeleton-card"></div>
-                  <div class="skeleton skeleton-card"></div>
-                  <div class="skeleton skeleton-card"></div>
-                </div>
-              </section>
-              <section class="pillar-group">
-                <div class="pillar-group__header">
-                  <p class="pillar-group__title">GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</p>
-                  <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
-                </div>
-                <div class="pillar-grid" id="geoPillars"></div>
-                <div class="pillar-skeleton" id="geoPillarsSkeleton">
-                  <div class="skeleton skeleton-card"></div>
-                  <div class="skeleton skeleton-card"></div>
-                  <div class="skeleton skeleton-card"></div>
-                </div>
-              </section>
+          <article class="results-card score-card dual hover-card" data-column="left">
+            <p class="score-card__eyebrow">📊 Gap Analysis</p>
+            <p class="score-card__value" id="gapScore">--</p>
+            <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
+          </article>
+
+          <article class="results-card score-card performance-card hover-card" data-column="left" id="performancePanel">
+            <div class="performance-card__heading">
+              <div>
+                <p class="performance-card__eyebrow">Speed Snapshot</p>
+                <p class="performance-card__title">Basic fetch metrics based on a single request.</p>
+              </div>
+              <div class="performance-card__score">
+                <p class="score-card__value" id="performanceScoreValue">--</p>
+                <span class="performance-card__total">/100</span>
               </div>
             </div>
+            <div class="performance-grid" id="performanceGrid"></div>
+            <div class="skeleton skeleton-metrics" id="performanceSkeleton">
+              <div class="skeleton-block"></div>
+              <div class="skeleton-block"></div>
+              <div class="skeleton-block"></div>
+              <div class="skeleton-block"></div>
+            </div>
+          </article>
 
-            <div class="results-column results-column--secondary">
-              <section class="bing-card hover-card" id="bingVerification">
-                <div class="bing-card__header">
-                  <h3>Microsoft/Bing Verification</h3>
-                <p class="helper-text small">Checks for msvalidate tags, IndexNow keys, llms.txt, and Bingbot access.</p>
+          <section class="results-card collapsible-card hover-card" data-column="left">
+            <button class="collapsible-toggle" type="button" data-collapse-target="seoPillarsPanel" aria-expanded="true">
+              <div class="collapsible-copy">
+                <p class="pillar-group__title">SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</p>
+                <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
               </div>
-              <ul class="bing-checks-list" id="bingChecksList">
-                <li class="helper-text small">Run an analysis to view verification status.</li>
-              </ul>
-            </section>
-
-            <div class="benchmarks hover-card" id="benchmarkComparison">
-              <h3>Industry Benchmark</h3>
-              <div class="benchmark-cards">
-                <div class="benchmark-card">
-                  <p>SEO vs industry average</p>
-                  <p class="benchmark-value" id="seoBenchmark"></p>
-                  <p class="benchmark-label" id="seoBenchmarkLabel"></p>
-                </div>
-                <div class="benchmark-card">
-                  <p>GEO vs industry average</p>
-                  <p class="benchmark-value" id="geoBenchmark"></p>
-                  <p class="benchmark-label" id="geoBenchmarkLabel"></p>
-                </div>
+              <span class="collapsible-caret" aria-hidden="true"></span>
+            </button>
+            <div class="collapsible-panel collapsible-panel--open" id="seoPillarsPanel">
+              <div class="pillar-grid" id="seoPillars"></div>
+              <div class="pillar-skeleton" id="seoPillarsSkeleton">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
               </div>
             </div>
+          </section>
 
-            <div class="recommendations hover-card">
-              <div class="recommendations__header">
-                <h3>Recommendations</h3>
-                <div class="chip-group" data-field="recommendation-view">
-                  <button class="chip chip--active" data-value="combined">Combined</button>
-                  <button class="chip" data-value="seo">SEO</button>
-                  <button class="chip" data-value="geo">GEO</button>
-                </div>
+          <section class="results-card collapsible-card hover-card" data-column="right">
+            <button class="collapsible-toggle" type="button" data-collapse-target="geoPillarsPanel" aria-expanded="true">
+              <div class="collapsible-copy">
+                <p class="pillar-group__title">GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</p>
+                <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
               </div>
-              <ul class="recommendation-list" id="recommendationList"></ul>
-              <div class="skeleton skeleton-list" id="recommendationsSkeleton">
-                <div class="skeleton-line skeleton-line--lg"></div>
-                <div class="skeleton-line"></div>
-                <div class="skeleton-line"></div>
+              <span class="collapsible-caret" aria-hidden="true"></span>
+            </button>
+            <div class="collapsible-panel collapsible-panel--open" id="geoPillarsPanel">
+              <div class="pillar-grid" id="geoPillars"></div>
+              <div class="pillar-skeleton" id="geoPillarsSkeleton">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
               </div>
             </div>
+          </section>
 
-            <div class="type-specific hover-card" id="typeSpecificFindings">
-              <h3>Content Type-Specific Findings</h3>
-              <ul></ul>
+          <section class="results-card bing-card hover-card" data-column="right" id="bingVerification">
+            <div class="bing-card__header">
+              <h3>Microsoft/Bing Verification</h3>
             </div>
+            <ul class="bing-checks-list" id="bingChecksList"></ul>
+          </section>
 
-            <div class="analysis-log hover-card">
-              <h3>Analysis Snapshot</h3>
-              <div class="snapshot-grid" id="analysisSnapshot">
-                <p class="helper-text small">Run an analysis to view real metrics, schema detection, tone insights, and more.</p>
+          <div class="results-card benchmarks hover-card" data-column="right" id="benchmarkComparison">
+            <h3>Industry Benchmark</h3>
+            <div class="benchmark-cards">
+              <div class="benchmark-card">
+                <p>SEO vs industry average</p>
+                <p class="benchmark-value" id="seoBenchmark"></p>
+                <p class="benchmark-label" id="seoBenchmarkLabel"></p>
               </div>
-              <div class="skeleton skeleton-table" id="snapshotSkeleton">
-                <div class="skeleton-line"></div>
-                <div class="skeleton-line"></div>
-                <div class="skeleton-line"></div>
-                <div class="skeleton-line"></div>
+              <div class="benchmark-card">
+                <p>GEO vs industry average</p>
+                <p class="benchmark-value" id="geoBenchmark"></p>
+                <p class="benchmark-label" id="geoBenchmarkLabel"></p>
               </div>
+            </div>
+          </div>
+
+          <div class="results-card recommendations hover-card" data-column="right">
+            <div class="recommendations__header">
+              <h3>Recommendations</h3>
+              <div class="chip-group" data-field="recommendation-view">
+                <button class="chip chip--active" data-value="combined">Combined</button>
+                <button class="chip" data-value="seo">SEO</button>
+                <button class="chip" data-value="geo">GEO</button>
+              </div>
+            </div>
+            <ul class="recommendation-list" id="recommendationList"></ul>
+            <div class="skeleton skeleton-list" id="recommendationsSkeleton">
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+          </div>
+
+          <div class="results-card type-specific hover-card" data-column="right" id="typeSpecificFindings">
+            <h3>Content Type-Specific Findings</h3>
+            <ul></ul>
+          </div>
+
+          <div class="results-card analysis-log hover-card" data-column="right">
+            <h3>Analysis Snapshot</h3>
+            <div class="snapshot-grid" id="analysisSnapshot"></div>
+            <div class="skeleton skeleton-table" id="snapshotSkeleton">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
             </div>
           </div>
         </div>

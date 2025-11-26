@@ -12,6 +12,10 @@ const state = {
   lastResult: null,
 };
 
+const COLLAPSE_DESKTOP_BREAKPOINT = 1280;
+let collapsibleToggles = [];
+let collapseMode = null;
+
 const elements = {
   urlField: document.getElementById('url-field'),
   htmlField: document.getElementById('html-field'),
@@ -105,6 +109,7 @@ subscriptionModal?.addEventListener('click', (event) => {
 
 toggleInputFields(state.inputType);
 initStickyHeader();
+initCollapsibleControls();
 updateStickyScores('--', '--');
 setResultsVisibility(false);
 setExportVisibility(false);
@@ -177,6 +182,40 @@ function updateStickyScores(seoScore, geoScore) {
   if (!elements.stickySeoScore || !elements.stickyGeoScore) return;
   elements.stickySeoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
   elements.stickyGeoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
+}
+
+function initCollapsibleControls() {
+  collapsibleToggles = Array.from(document.querySelectorAll('[data-collapse-target]'));
+  if (!collapsibleToggles.length) return;
+  collapsibleToggles.forEach((toggle) => {
+    toggle.addEventListener('click', () => {
+      if (window.innerWidth >= COLLAPSE_DESKTOP_BREAKPOINT) return;
+      toggleCollapsible(toggle);
+    });
+  });
+  window.addEventListener('resize', () => handleCollapsibleResize());
+  handleCollapsibleResize(true);
+}
+
+function toggleCollapsible(toggle, forceState) {
+  const targetId = toggle?.dataset?.collapseTarget;
+  const panel = targetId ? document.getElementById(targetId) : null;
+  if (!panel) return;
+  const shouldExpand = forceState !== undefined ? forceState : toggle.getAttribute('aria-expanded') !== 'true';
+  toggle.setAttribute('aria-expanded', String(shouldExpand));
+  panel.classList.toggle('collapsible-panel--open', shouldExpand);
+}
+
+function handleCollapsibleResize(force = false) {
+  if (!collapsibleToggles.length) return;
+  const isDesktop = window.innerWidth >= COLLAPSE_DESKTOP_BREAKPOINT;
+  const mode = isDesktop ? 'desktop' : 'mobile';
+  if (!force && mode === collapseMode) return;
+  collapseMode = mode;
+  collapsibleToggles.forEach((toggle) => {
+    toggle.classList.toggle('collapsible-toggle--locked', isDesktop);
+    toggleCollapsible(toggle, isDesktop);
+  });
 }
 
 function setResultsVisibility(hasResults) {
