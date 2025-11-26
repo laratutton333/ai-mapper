@@ -64,8 +64,8 @@ const elements = {
   resultsPanel: document.querySelector('.results-panel'),
   emptyState: document.getElementById('empty-state'),
   resultsContainer: document.getElementById('results-container'),
-  detailsPanel: document.querySelector('#pillarDetailsOverlay .details-panel'),
-  detailsOverlay: document.getElementById('pillarDetailsOverlay'),
+  detailsPanel: document.getElementById('details-panel'),
+  detailsBackdrop: document.getElementById('details-backdrop'),
   detailsPanelTitle: document.getElementById('detailsPanelTitle'),
   detailsPanelSummary: document.getElementById('detailsPanelSummary'),
   detailsPanelBody: document.getElementById('detailsPanelBody'),
@@ -124,7 +124,7 @@ subscriptionModal?.addEventListener('click', (event) => {
 toggleInputFields(state.inputType);
 initStickyHeader();
 initCollapsibleControls();
-initDetailsOverlay();
+initDetailsPanel();
 updateStickyScores('--', '--');
 setResultsVisibility(false);
 setExportVisibility(false);
@@ -234,14 +234,11 @@ function handleCollapsibleResize(force = false) {
   });
 }
 
-function initDetailsOverlay() {
-  if (!elements.detailsOverlay) return;
+function initDetailsPanel() {
+  if (!elements.detailsPanel) return;
+  document.addEventListener('click', handleDetailsTriggerEvent);
   elements.detailsPanelCloseBtn?.addEventListener('click', () => closeDetailsPanel());
-  elements.detailsOverlay.addEventListener('click', (event) => {
-    if (event.target === elements.detailsOverlay) {
-      closeDetailsPanel();
-    }
-  });
+  elements.detailsBackdrop?.addEventListener('click', () => closeDetailsPanel());
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       closeDetailsPanel();
@@ -802,13 +799,13 @@ function renderPillarSection(container, list = []) {
     badge.setAttribute('aria-label', `${pillar.label} status: ${status.label}`);
 
     const detailsButton = document.createElement('button');
-    detailsButton.className = 'details-pill';
+    detailsButton.className = 'details-pill view-details-button';
     detailsButton.type = 'button';
     detailsButton.dataset.detailsTarget = detailsId;
     detailsButton.dataset.pillarName = pillar.label;
     detailsButton.dataset.pillarSummary = pillar.description;
     detailsButton.setAttribute('aria-expanded', 'false');
-    detailsButton.setAttribute('aria-controls', 'pillarDetailsOverlay');
+    detailsButton.setAttribute('aria-controls', 'details-panel');
     detailsButton.textContent = 'View Details';
 
     statusWrapper.append(badge, detailsButton);
@@ -817,7 +814,7 @@ function renderPillarSection(container, list = []) {
     tooltip.className = 'status-tooltip';
     tooltip.innerHTML = `
       <p>${status.message}</p>
-      <button type="button" class="status-tooltip__link" data-details-target="${detailsId}" data-pillar-name="${pillar.label}" data-pillar-summary="${pillar.description}">
+      <button type="button" class="status-tooltip__link view-details-button" data-details-target="${detailsId}" data-pillar-name="${pillar.label}" data-pillar-summary="${pillar.description}">
         View Full Details →
       </button>
     `;
@@ -848,19 +845,7 @@ function renderPillarSection(container, list = []) {
     card.append(header, scoreWrap, detailsContent);
     container.appendChild(card);
 
-    const tooltipLink = tooltip.querySelector('button');
     setupStatusTooltip(badge, tooltip);
-    attachDetailsTrigger(detailsButton);
-    attachDetailsTrigger(tooltipLink);
-  });
-}
-
-function attachDetailsTrigger(trigger) {
-  if (!trigger) return;
-  trigger.addEventListener('click', () => {
-    const detailsId = trigger.dataset.detailsTarget;
-    if (!detailsId) return;
-    openDetailsPanel(detailsId, trigger.dataset.pillarName, trigger.dataset.pillarSummary, trigger);
   });
 }
 
@@ -874,20 +859,30 @@ function setupStatusTooltip(badge, tooltip) {
   badge.addEventListener('blur', hide);
 }
 
+function handleDetailsTriggerEvent(event) {
+  const trigger = event.target.closest('.view-details-button');
+  if (!trigger) return;
+  event.preventDefault();
+  const detailsId = trigger.dataset.detailsTarget;
+  if (!detailsId) return;
+  openDetailsPanel(detailsId, trigger.dataset.pillarName, trigger.dataset.pillarSummary, trigger);
+}
+
 function openDetailsPanel(detailsId, title, summary, trigger) {
-  if (!elements.detailsOverlay || !detailsId) return;
-  if (!elements.detailsOverlay.hasAttribute('hidden')) {
-    closeDetailsPanel({ silent: true });
-  }
+  if (!elements.detailsPanel || !detailsId) return;
   const source = document.getElementById(detailsId);
   if (!source) return;
   elements.detailsPanelBody.innerHTML = source.innerHTML;
   elements.detailsPanelTitle.textContent = title || 'Details';
   elements.detailsPanelSummary.textContent = summary || '';
-  elements.detailsOverlay.removeAttribute('hidden');
-  elements.detailsOverlay.setAttribute('aria-hidden', 'false');
   elements.detailsPanelBody.scrollTop = 0;
-  elements.detailsPanel?.focus();
+  elements.detailsPanel.classList.remove('hidden');
+  elements.detailsBackdrop?.classList.remove('hidden');
+  elements.detailsPanel.classList.add('open');
+  elements.detailsBackdrop?.classList.add('open');
+  elements.detailsPanel.setAttribute('aria-hidden', 'false');
+  elements.detailsBackdrop?.setAttribute('aria-hidden', 'false');
+  elements.detailsPanel.focus();
   state.activeDetailsId = detailsId;
   state.activeDetailsTrigger = trigger ?? null;
   if (trigger) {
@@ -896,13 +891,15 @@ function openDetailsPanel(detailsId, title, summary, trigger) {
 }
 
 function closeDetailsPanel(options = {}) {
-  if (!elements.detailsOverlay) return;
-  const wasOpen = !elements.detailsOverlay.hasAttribute('hidden');
-  if (wasOpen) {
-    elements.detailsOverlay.setAttribute('hidden', 'hidden');
-    elements.detailsOverlay.setAttribute('aria-hidden', 'true');
-    elements.detailsPanelBody.innerHTML = '';
-  }
+  if (!elements.detailsPanel) return;
+  const wasOpen = elements.detailsPanel.classList.contains('open');
+  elements.detailsPanel.classList.remove('open');
+  elements.detailsBackdrop?.classList.remove('open');
+  elements.detailsPanel.classList.add('hidden');
+  elements.detailsBackdrop?.classList.add('hidden');
+  elements.detailsPanel.setAttribute('aria-hidden', 'true');
+  elements.detailsBackdrop?.setAttribute('aria-hidden', 'true');
+  elements.detailsPanelBody.innerHTML = '';
   if (state.activeDetailsTrigger) {
     state.activeDetailsTrigger.setAttribute('aria-expanded', 'false');
     if (!options.silent && wasOpen) {
