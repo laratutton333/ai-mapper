@@ -2,8 +2,8 @@ import { INDUSTRY_BENCHMARKS, summarizeBenchmark } from './analysis/benchmarks.j
 import { buildRecommendations, getTypeSpecificFindings } from './analysis/recommendations.js';
 
 // Prefer explicit global override (set window.AI_MAPPER_API_URL before loading this script)
-// otherwise fall back to the deployed backend URL when running on Vercel or relative path locally.
-const API_BASE = window.AI_MAPPER_API_URL || 'https://ai-mapper-backend.vercel.app';
+// otherwise fall back to the deployed backend URL when running on Render or relative path locally.
+const API_BASE = window.AI_MAPPER_API_URL || 'https://ai-mapper-backend.onrender.com';
 
 const state = {
   inputType: 'url',
@@ -21,6 +21,7 @@ const elements = {
   textInput: document.getElementById('textInput'),
   contentType: document.getElementById('contentType'),
   industry: document.getElementById('industrySelect'),
+  statusBanner: document.getElementById('statusBanner'),
   analyzeBtn: document.getElementById('analyzeBtn'),
   resetBtn: document.getElementById('resetBtn'),
   exportBtn: document.getElementById('exportBtn'),
@@ -105,6 +106,17 @@ function toggleInputFields(type) {
   elements.textField.classList.toggle('hidden', type !== 'text');
 }
 
+function showStatus(message = '', variant = 'info') {
+  if (!elements.statusBanner) return;
+  if (!message) {
+    elements.statusBanner.textContent = '';
+    elements.statusBanner.className = 'status-banner hidden';
+    return;
+  }
+  elements.statusBanner.textContent = message;
+  elements.statusBanner.className = `status-banner status-banner--${variant}`;
+}
+
 /* ANALYSIS ----------------------------------------------------------------- */
 async function handleAnalyze() {
   const ctx = {
@@ -112,6 +124,7 @@ async function handleAnalyze() {
     contentType: elements.contentType.value,
     industry: elements.industry.value,
     url: elements.urlInput.value.trim(),
+    analysisMode: state.mode,
   };
 
   try {
@@ -131,19 +144,25 @@ async function handleAnalyze() {
       geoScore: fetched.geoScore,
       seoBreakdown: fetched.seoBreakdown ?? {},
       geoBreakdown: fetched.geoBreakdown ?? {},
+      microsoftBingChecks: fetched.microsoftBingChecks ?? null,
+      analysisMode: ctx.analysisMode,
       ...ctx,
     });
 
     state.lastResult = result;
     renderResults(result);
+    showStatus('Analysis complete. Review the cards below for insights.', 'success');
   } catch (error) {
     console.error(error);
     if (error.code === 'subscription_required') {
       showSubscriptionModal();
-      updateSnapshot('Subscription required to continue analyzing content.');
+      const message = 'Subscription required to continue analyzing content.';
+      showStatus(message, 'error');
+      updateSnapshot(message);
     } else {
-      alert(error.message ?? 'Unable to analyze content.');
-      updateSnapshot(`Unable to analyze content.\nReason: ${error.message}`);
+      const friendly = error.message ?? 'Unable to analyze content.';
+      showStatus(friendly, 'error');
+      updateSnapshot(`Unable to analyze content.\nReason: ${friendly}`);
     }
   } finally {
     setAnalysisState(false);
@@ -157,21 +176,31 @@ function setAnalysisState(isRunning) {
     loadingOverlay.classList.toggle('loading-overlay--visible', isRunning);
     loadingOverlay?.setAttribute('aria-hidden', isRunning ? 'false' : 'true');
   }
+  if (isRunning) {
+    showStatus('Analyzing content…', 'info');
+  }
 }
 
 function buildAnalysisPayload(ctx) {
+  const basePayload = {
+    mode: ctx.inputType,
+    analysisMode: ctx.analysisMode,
+    contentType: ctx.contentType,
+    industry: ctx.industry,
+  };
+
   if (ctx.inputType === 'url') {
     if (!ctx.url) throw new Error('Please provide a URL to analyze.');
-    return { url: ctx.url };
+    return { ...basePayload, url: ctx.url, content: ctx.url };
   }
   if (ctx.inputType === 'html') {
     const html = elements.htmlInput.value.trim();
     if (!html) throw new Error('Paste HTML source to analyze.');
-    return { html };
+    return { ...basePayload, html, content: html };
   }
   const text = elements.textInput.value.trim();
   if (!text) throw new Error('Paste text content to analyze.');
-  return { text };
+  return { ...basePayload, text, content: text };
 }
 
 async function runAnalysis(payload) {
@@ -223,6 +252,7 @@ function analyzeContent({
   url,
   contentType,
   industry,
+  analysisMode,
   performance,
   backendMetrics,
   seoScore,
@@ -281,8 +311,7 @@ function analyzeContent({
     seoBreakdown: seo.breakdown,
     geoBreakdown: geo.breakdown,
     microsoftBingChecks,
-    microsoftBingChecks: payload.microsoftBingChecks ?? null,
-    meta: { inputType, url, contentType, industry },
+    meta: { inputType, url, contentType, industry, analysisMode },
   };
 
   return result;
@@ -1109,6 +1138,7 @@ function resetForm() {
   elements.htmlInput.value = '';
   elements.textInput.value = '';
   updateSnapshot('Form reset. Add content and run analysis.');
+  showStatus('', 'info');
   state.lastResult = null;
   if (elements.seoPillars) elements.seoPillars.innerHTML = '';
   if (elements.geoPillars) elements.geoPillars.innerHTML = '';
