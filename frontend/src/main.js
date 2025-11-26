@@ -42,6 +42,7 @@ const elements = {
   geoBreakdownScore: document.getElementById('geoBreakdownScore'),
   performanceScore: document.getElementById('performanceScoreValue'),
   performanceGrid: document.getElementById('performanceGrid'),
+  bingChecks: document.getElementById('bingChecksList'),
 };
 const heroJumpButtons = document.querySelectorAll('[data-jump]');
 const subscriptionModal = document.getElementById('subscriptionModal');
@@ -211,6 +212,7 @@ async function runAnalysis(payload) {
     geoScore: data.geoScore ?? 0,
     seoBreakdown: data.seoBreakdown ?? {},
     geoBreakdown: data.geoBreakdown ?? {},
+    microsoftBingChecks: data.microsoftBingChecks ?? null,
   };
 }
 
@@ -227,6 +229,7 @@ function analyzeContent({
   geoScore,
   seoBreakdown,
   geoBreakdown,
+  microsoftBingChecks,
 }) {
   const textStats = computeTextStats(text);
   const structural = analyzeStructure(html, inputType, url);
@@ -277,6 +280,8 @@ function analyzeContent({
     performance,
     seoBreakdown: seo.breakdown,
     geoBreakdown: geo.breakdown,
+    microsoftBingChecks,
+    microsoftBingChecks: payload.microsoftBingChecks ?? null,
     meta: { inputType, url, contentType, industry },
   };
 
@@ -305,23 +310,47 @@ const SEO_PILLAR_META = {
 };
 
 const GEO_PILLAR_META = {
-  directAnswer: {
-    id: 'directAnswer',
-    label: 'Direct Answer Quality',
-    description: 'Summary intros, definition clarity, snippet-ready formatting.',
-    maxPoints: 40,
+  structuredData: {
+    id: 'structuredData',
+    label: 'Structured Data',
+    description: 'Schema alignment, breadcrumbs, and entity relationships.',
+    maxPoints: 20,
   },
-  conversational: {
-    id: 'conversational',
-    label: 'Conversational Structure',
-    description: 'Q&A coverage and heading alignment to intent.',
-    maxPoints: 30,
+  contentClarity: {
+    id: 'contentClarity',
+    label: 'Content Structure & Clarity',
+    description: 'Headings, TL;DR coverage, Q&A blocks, and chunked paragraphs.',
+    maxPoints: 20,
   },
-  ingestion: {
-    id: 'ingestion',
-    label: 'LLM Ingestion Optimization',
-    description: 'Factual statements, redundancy control, and clarity.',
-    maxPoints: 30,
+  entityArchitecture: {
+    id: 'entityArchitecture',
+    label: 'Entity Architecture',
+    description: 'Internal linking, anchors, and clean URL structures.',
+    maxPoints: 15,
+  },
+  technicalGeo: {
+    id: 'technicalGeo',
+    label: 'Technical GEO & Indexability',
+    description: 'llms.txt, IndexNow, robots directives, and SSR/lightweight HTML.',
+    maxPoints: 20,
+  },
+  authoritySignals: {
+    id: 'authoritySignals',
+    label: 'Authority & Source Signals',
+    description: 'Author schema, bios, citations, and first-party signals.',
+    maxPoints: 15,
+  },
+  freshness: {
+    id: 'freshness',
+    label: 'Freshness',
+    description: 'Recent updates and current content references.',
+    maxPoints: 5,
+  },
+  safety: {
+    id: 'safety',
+    label: 'Safety & Consistency',
+    description: 'Disclaimers, clarity, and absence of contradictions.',
+    maxPoints: 5,
   },
 };
 
@@ -493,7 +522,17 @@ function inferOwnedDomain(url = '', doc) {
 
 /* RENDERING ---------------------------------------------------------------- */
 function renderResults(result) {
-  const { seoScore, geoScore, recommendations, typeFindings, metrics, performance, seoPillars, geoPillars } = result;
+  const {
+    seoScore,
+    geoScore,
+    recommendations,
+    typeFindings,
+    metrics,
+    performance,
+    seoPillars,
+    geoPillars,
+    microsoftBingChecks,
+  } = result;
   elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
   elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
 
@@ -511,6 +550,7 @@ function renderResults(result) {
   renderRecommendations(recommendations);
   renderTypeSpecific(typeFindings);
   renderPerformance(performance);
+  renderMicrosoftChecks(microsoftBingChecks);
   updateBenchmarks(result);
   renderSnapshotTable(result);
 }
@@ -724,6 +764,69 @@ function renderPerformance(performance) {
     .join('');
 
   elements.performanceGrid.innerHTML = template;
+}
+
+function renderMicrosoftChecks(checks) {
+  if (!elements.bingChecks) return;
+  if (!checks) {
+    elements.bingChecks.innerHTML = '<li class="helper-text small">Run an analysis to view verification status.</li>';
+    return;
+  }
+
+  const items = [
+    {
+      id: 'meta',
+      label: 'Meta msvalidate tag',
+      value: checks.meta_msvalidate ? `Detected (${checks.meta_msvalidate})` : 'Missing',
+      status: checks.meta_msvalidate,
+    },
+    {
+      id: 'dns',
+      label: 'DNS msvalidate TXT',
+      value: checks.dns_msvalidate ?? 'Not found',
+      status: Boolean(checks.dns_msvalidate),
+    },
+    {
+      id: 'indexnow',
+      label: 'IndexNow endpoint',
+      value: checks.indexnow_endpoint ? 'Accessible' : 'Missing',
+      status: checks.indexnow_endpoint,
+    },
+    {
+      id: 'llms',
+      label: 'llms.txt present',
+      value: checks.llms_txt_present ? 'Detected' : 'Not detected',
+      status: checks.llms_txt_present,
+    },
+    {
+      id: 'bingbot',
+      label: 'Bingbot allowed in robots.txt',
+      value:
+        checks.bingbot_allowed === null
+          ? 'Unknown'
+          : checks.bingbot_allowed
+          ? checks.bingbot_disallow?.length
+            ? `Allowed · Disallowed: ${checks.bingbot_disallow.join(', ')}`
+            : 'Allowed'
+          : 'Blocked or not specified',
+      status: checks.bingbot_allowed === null ? false : checks.bingbot_allowed,
+      warn: checks.bingbot_allowed === null,
+    },
+  ];
+
+  elements.bingChecks.innerHTML = items
+    .map((item) => {
+      const statusClass = item.warn ? 'status-pill--warn' : item.status ? 'status-pill--pass' : 'status-pill--fail';
+      const statusLabel = item.warn ? 'Unknown' : item.status ? 'Pass' : 'Missing';
+      return `
+        <li class="bing-check">
+          <span class="bing-check__label">${item.label}</span>
+          <span class="status-pill ${statusClass}">${statusLabel}</span>
+          <p class="helper-text small">${item.value}</p>
+        </li>
+      `;
+    })
+    .join('');
 }
 
 function updateBenchmarks(result) {
@@ -959,6 +1062,42 @@ function formatList(value) {
   return 'None';
 }
 
+function formatBingChecksForExport(checks) {
+  if (!checks) {
+    return '<li>No Microsoft/Bing verification data available.</li>';
+  }
+  const map = [
+    {
+      label: 'Meta msvalidate tag',
+      value: checks.meta_msvalidate ? `Detected (${checks.meta_msvalidate})` : 'Missing',
+    },
+    {
+      label: 'DNS msvalidate TXT',
+      value: checks.dns_msvalidate ?? 'Not found',
+    },
+    {
+      label: 'IndexNow endpoint',
+      value: checks.indexnow_endpoint ? 'Accessible' : 'Missing',
+    },
+    {
+      label: 'llms.txt present',
+      value: checks.llms_txt_present ? 'Detected' : 'Not detected',
+    },
+    {
+      label: 'Bingbot allowed in robots.txt',
+      value:
+        checks.bingbot_allowed === null
+          ? 'Unknown'
+          : checks.bingbot_allowed
+          ? checks.bingbot_disallow?.length
+            ? `Allowed · Disallowed: ${checks.bingbot_disallow.join(', ')}`
+            : 'Allowed'
+          : 'Blocked or not specified',
+    },
+  ];
+  return map.map((entry) => `<li>${entry.label}: ${entry.value}</li>`).join('\n');
+}
+
 function classifyScore(score) {
   if (score >= 80) return { label: 'Strong', className: '' };
   if (score >= 60) return { label: 'Watch', className: 'challenged' };
@@ -986,6 +1125,7 @@ function resetForm() {
   if (elements.seoBreakdownScore) elements.seoBreakdownScore.textContent = '--';
   if (elements.geoBreakdownScore) elements.geoBreakdownScore.textContent = '--';
   renderPerformance(null);
+  renderMicrosoftChecks(null);
 }
 
 function exportReport() {
@@ -1003,6 +1143,7 @@ function exportReport() {
   <li>Largest image: ${formatBytesToKB(result.performance.largestImageBytes)} KB (${result.performance.grades.largestImage})</li>
 </ul>`
     : '<p>URL input required to capture live performance metrics.</p>';
+  const bingSection = formatBingChecksForExport(result.microsoftBingChecks);
   const report = `
 <!DOCTYPE html>
 <html lang="en">
@@ -1041,6 +1182,10 @@ ${result.recommendations.combined.map((item) => `<li>${item.priority} — ${item
 </ol>
 <h2>Performance Metrics</h2>
 ${performanceSection}
+<h2>Microsoft/Bing Verification</h2>
+<ul>
+${bingSection}
+</ul>
 <h2>Type-Specific Findings</h2>
 <ul>
 ${result.typeFindings.map((text) => `<li>${text}</li>`).join('\n')}

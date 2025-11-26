@@ -345,6 +345,70 @@ textarea {
   color: #c2410c;
 }
 
+.bing-card {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.85rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: #fff;
+}
+
+.bing-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.bing-checks-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.bing-check {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: #f8fafc;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bing-check__label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 0.1rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-pill--pass {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+
+.status-pill--warn {
+  background: rgba(251, 191, 36, 0.2);
+  color: #92400e;
+}
+
+.status-pill--fail {
+  background: rgba(248, 113, 22, 0.2);
+  color: #c2410c;
+}
+
 .score-card {
   padding: 1rem;
   border-radius: 1rem;

@@ -2,6 +2,7 @@ import { URL } from 'node:url';
 import { analyzePerformanceBasic } from '../analysis/performance.js';
 import { extractMetrics } from '../analysis/extractMetrics.js';
 import { computeSeoScore, computeGeoScore } from '../analysis/scoring.js';
+import { collectSiteSignals } from '../analysis/siteSignals.js';
 
 const usageTracker = new Map();
 const FREE_ANALYSIS_LIMIT = Number(process.env.FREE_ANALYSIS_LIMIT ?? 1);
@@ -44,11 +45,15 @@ export default async function handler(req, res) {
       let html = '';
       let performance = null;
       let normalizedUrl = '';
+      let statusCode = null;
+      let siteSignals = {};
       if (body.url) {
         normalizedUrl = normalizeUrl(body.url);
         const performanceResult = await analyzePerformanceBasic(normalizedUrl);
         html = performanceResult.html;
         performance = performanceResult.performance;
+        statusCode = performanceResult.statusCode ?? null;
+        siteSignals = await collectSiteSignals(performanceResult.finalUrl ?? normalizedUrl);
       } else if (body.html) {
         html = body.html;
       } else if (body.text) {
@@ -57,9 +62,13 @@ export default async function handler(req, res) {
       if (!html) {
         throw new Error('No HTML content returned for analysis.');
       }
-      const metrics = extractMetrics(html, normalizedUrl);
+      const metrics = extractMetrics(html, normalizedUrl, {
+        siteSignals,
+        statusCode,
+      });
       const seoResult = computeSeoScore(metrics, html);
       const geoResult = computeGeoScore(metrics, html);
+      const microsoftBingChecks = buildMicrosoftChecks(metrics, siteSignals);
       if (!subscribed) {
         recordUsage(clientId);
       }
@@ -71,6 +80,7 @@ export default async function handler(req, res) {
         geoScore: geoResult.total,
         seoBreakdown: seoResult.breakdown,
         geoBreakdown: geoResult.breakdown,
+        microsoftBingChecks,
       });
     } catch (error) {
       console.error('Analyze error', error);
@@ -175,4 +185,17 @@ function wrapTextAsHtml(text = '') {
   if (!normalized) return '';
   const blocks = normalized.split(/\n{2,}/).map((block) => `<p>${block.replace(/\n/g, ' ').trim()}</p>`);
   return `<article>${blocks.join('')}</article>`;
+}
+
+function buildMicrosoftChecks(metrics, siteSignals = {}) {
+  return {
+    meta_msvalidate: metrics.msValidateMeta ?? null,
+    dns_msvalidate: siteSignals.dnsMsvalidate ?? null,
+    indexnow_endpoint: Boolean(siteSignals.indexNowEndpointOk),
+    llms_txt_present: Boolean(siteSignals.llmsTxtPresent),
+    bingbot_allowed: siteSignals.bingbotAllowed !== null ? Boolean(siteSignals.bingbotAllowed) : null,
+    bingbot_disallow: siteSignals.bingbotDisallow ?? [],
+    robots_txt_available: Boolean(siteSignals.robotsTxt),
+    sitemap_detected: Boolean(siteSignals.sitemapXml),
+  };
 }

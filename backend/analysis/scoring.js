@@ -135,95 +135,67 @@ const SEO_RULES = [
 ];
 
 const GEO_RULES = [
+  { id: 'validSchema', label: 'Valid schema', category: 'structuredData', maxPoints: 6, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'structuredData', 'validSchema'), 6) },
+  { id: 'correctSchemaType', label: 'Correct schema type', category: 'structuredData', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'structuredData', 'correctSchemaType'), 3) },
+  { id: 'entityRelationships', label: 'Entity relationships defined', category: 'structuredData', maxPoints: 5, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'structuredData', 'entityRelationships'), 5) },
+  { id: 'breadcrumbSchema', label: 'Breadcrumb schema', category: 'structuredData', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'structuredData', 'breadcrumbSchema'), 3) },
+  { id: 'imageAuthorCitation', label: 'Image + author metadata', category: 'structuredData', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'structuredData', 'imageAuthorCitationMetadata'), 3) },
+  { id: 'headingHierarchy', label: 'Heading hierarchy', category: 'contentClarity', maxPoints: 4, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'contentClarity', 'headingHierarchy'), 4) },
+  { id: 'summaryTldr', label: 'Summary / TL;DR present', category: 'contentClarity', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'contentClarity', 'summaryTldrPresent'), 3) },
+  { id: 'qaBlocks', label: 'Q&A blocks present', category: 'contentClarity', maxPoints: 4, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'contentClarity', 'qaBlocksPresent'), 4) },
+  { id: 'shortParagraphs', label: 'Short chunked paragraphs', category: 'contentClarity', maxPoints: 4, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'contentClarity', 'shortChunkedParagraphs'), 4) },
+  { id: 'listsTables', label: 'Lists / tables present', category: 'contentClarity', maxPoints: 5, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'contentClarity', 'listsTablesPresent'), 5) },
+  { id: 'topicClusterLinks', label: 'Topic cluster internal links', category: 'entityArchitecture', maxPoints: 5, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'entityArchitecture', 'topicClusterInternalLinks'), 5) },
+  { id: 'entityHubs', label: 'Canonical entity hubs', category: 'entityArchitecture', maxPoints: 4, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'entityArchitecture', 'canonicalEntityHubs'), 4) },
+  { id: 'naturalAnchors', label: 'Natural anchor text', category: 'entityArchitecture', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'entityArchitecture', 'naturalAnchorText'), 3) },
+  { id: 'cleanUrl', label: 'Clean URL structure', category: 'entityArchitecture', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'entityArchitecture', 'cleanUrlStructure'), 3) },
+  { id: 'llmsTxt', label: 'llms.txt present', category: 'technicalGeo', maxPoints: 4, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'technicalGeo', 'llmsTxtPresent'), 4) },
+  { id: 'robotsAllow', label: 'Robots allow LLM/Bing', category: 'technicalGeo', maxPoints: 2, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'technicalGeo', 'robotsAllowsLlm'), 2) },
+  { id: 'indexNow', label: 'IndexNow key available', category: 'technicalGeo', maxPoints: 4, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'technicalGeo', 'indexnowKeyPresent'), 4) },
+  { id: 'ssr', label: 'Server-side rendering', category: 'technicalGeo', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'technicalGeo', 'serverSideRendering'), 3) },
+  { id: 'lightweightHtml', label: 'Lightweight HTML', category: 'technicalGeo', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'technicalGeo', 'lightweightHtml'), 3) },
+  { id: 'sitemapLastmod', label: 'Sitemap lastmod accurate', category: 'technicalGeo', maxPoints: 2, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'technicalGeo', 'sitemapLastmodCorrect'), 2) },
+  { id: 'statusCodes', label: 'Correct status codes', category: 'technicalGeo', maxPoints: 2, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'technicalGeo', 'correctStatusCodes'), 2) },
   {
-    id: 'answerIntro',
-    label: 'Summary intro',
-    category: 'directAnswer',
-    maxPoints: 15,
-    evaluate: (metrics) => {
-      if (metrics.summaryQuality === 'strong') return { points: 15 };
-      if (metrics.summaryQuality === 'partial') return { points: 8 };
-      return { points: 0 };
-    },
+    id: 'authorSchema',
+    label: 'Author schema detected',
+    category: 'authoritySignals',
+    maxPoints: 4,
+    evaluate: (metrics) => boolToPoints(getSignal(metrics, 'authoritySignals', 'authorSchema'), 4),
   },
   {
-    id: 'definitionClarity',
-    label: 'Definition clarity',
-    category: 'directAnswer',
-    maxPoints: 10,
-    evaluate: (metrics) => {
-      if (metrics.definitionClarity === 'clear') return { points: 10 };
-      if (metrics.definitionClarity === 'partial') return { points: 5 };
-      return { points: 0 };
-    },
+    id: 'authorBio',
+    label: 'Author bio available',
+    category: 'authoritySignals',
+    maxPoints: 3,
+    evaluate: (metrics) => boolToPoints(getSignal(metrics, 'authoritySignals', 'authorBioAvailable'), 3),
   },
   {
-    id: 'snippetFormatting',
-    label: 'Snippet-friendly formatting',
-    category: 'directAnswer',
-    maxPoints: 15,
-    evaluate: (metrics) => {
-      if (metrics.snippetFormatting === 'strong') return { points: 15 };
-      if (metrics.snippetFormatting === 'partial') return { points: 8 };
-      return { points: 0 };
-    },
+    id: 'externalCitations',
+    label: 'Authoritative citations',
+    category: 'authoritySignals',
+    maxPoints: 3,
+    evaluate: (metrics) => boolToPoints(getSignal(metrics, 'authoritySignals', 'externalAuthoritativeCitations'), 3),
   },
   {
-    id: 'qaStructure',
-    label: 'Q&A structure',
-    category: 'conversational',
-    maxPoints: 15,
-    evaluate: (metrics) => {
-      if (metrics.qaCoverage === 'multiple') return { points: 15 };
-      if (metrics.qaCoverage === 'single') return { points: 8 };
-      return { points: 0 };
-    },
+    id: 'firstPartyData',
+    label: 'First-party data present',
+    category: 'authoritySignals',
+    maxPoints: 3,
+    evaluate: (metrics) => boolToPoints(getSignal(metrics, 'authoritySignals', 'firstPartyDataPresent'), 3),
   },
   {
-    id: 'sectionAlignment',
-    label: 'Section labeling',
-    category: 'conversational',
-    maxPoints: 15,
-    evaluate: (metrics) => {
-      if (metrics.sectionAlignment === 'strong') return { points: 15 };
-      if (metrics.sectionAlignment === 'partial') return { points: 8 };
-      return { points: 0 };
-    },
+    id: 'factualTone',
+    label: 'Factual tone',
+    category: 'authoritySignals',
+    maxPoints: 2,
+    evaluate: (metrics) => boolToPoints(getSignal(metrics, 'authoritySignals', 'factualTone'), 2),
   },
-  {
-    id: 'factualStatements',
-    label: 'Factual statements',
-    category: 'ingestion',
-    maxPoints: 10,
-    evaluate: (metrics) => {
-      if (metrics.factualDensity >= 5) return { points: 10 };
-      if (metrics.factualDensity >= 2) return { points: 5 };
-      return { points: 0 };
-    },
-  },
-  {
-    id: 'redundancy',
-    label: 'Redundancy control',
-    category: 'ingestion',
-    maxPoints: 10,
-    evaluate: (metrics) => {
-      if (metrics.redundancyScore >= 0.8) return { points: 10 };
-      if (metrics.redundancyScore >= 0.6) return { points: 5 };
-      return { points: 0 };
-    },
-  },
-  {
-    id: 'clarity',
-    label: 'Clarity & simplicity',
-    category: 'ingestion',
-    maxPoints: 10,
-    evaluate: (metrics) => {
-      const readability = metrics.readabilityScore ?? 0;
-      if (readability >= 60 && readability <= 80) return { points: 10 };
-      if (readability >= 50 && readability < 60) return { points: 5 };
-      return { points: 0 };
-    },
-  },
+  { id: 'dateModified', label: 'Recent modified date', category: 'freshness', maxPoints: 3, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'freshness', 'dateModifiedRecent'), 3) },
+  { id: 'currentContent', label: 'Current body content', category: 'freshness', maxPoints: 2, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'freshness', 'currentBodyContent'), 2) },
+  { id: 'noContradictions', label: 'No contradictions', category: 'safety', maxPoints: 2, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'safety', 'noContradictions'), 2) },
+  { id: 'disclaimers', label: 'Disclaimers present', category: 'safety', maxPoints: 2, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'safety', 'disclaimersPresent'), 2) },
+  { id: 'noVagueStatements', label: 'No vague statements', category: 'safety', maxPoints: 1, evaluate: (metrics) => boolToPoints(getSignal(metrics, 'safety', 'noVagueStatements'), 1) },
 ];
 
 export function computeSeoScore(metrics = {}, html = '') {
@@ -266,4 +238,13 @@ function computeScore(rules, metrics, html) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function boolToPoints(value, maxPoints) {
+  if (value === null || value === undefined) return { points: 0 };
+  return { points: value ? maxPoints : 0 };
+}
+
+function getSignal(metrics, category, key) {
+  return metrics?.geoSignals?.[category]?.[key] ?? false;
 }

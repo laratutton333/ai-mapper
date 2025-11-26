@@ -50,6 +50,8 @@ export async function analyzePerformanceBasic(targetUrl) {
 
   return {
     html,
+    statusCode: response.status,
+    finalUrl: response.request?.res?.responseUrl ?? targetUrl,
     performance: {
       responseTimeMs,
       pageSizeBytes,
@@ -57,6 +59,7 @@ export async function analyzePerformanceBasic(targetUrl) {
       largestImageBytes,
       performanceScore,
       grades,
+      statusCode: response.status,
     },
   };
 }

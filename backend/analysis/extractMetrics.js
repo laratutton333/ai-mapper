@@ -1,8 +1,11 @@
 import { JSDOM } from 'jsdom';
 
-export function extractMetrics(html = '', url = '') {
+export function extractMetrics(html = '', url = '', options = {}) {
+  const siteSignals = options.siteSignals ?? {};
+  const statusCode = options.statusCode ?? null;
   const dom = new JSDOM(html || '<body></body>');
   const document = dom.window.document;
+  const htmlBytes = Buffer.byteLength(html ?? '', 'utf8');
 
   const bodyText = normalizeWhitespace(document.body?.textContent ?? '');
   const wordCount = countWords(bodyText);
@@ -28,7 +31,8 @@ export function extractMetrics(html = '', url = '') {
   }));
   const headingStructureQuality = evaluateHeadingStructure(headings);
 
-  const schemaTypes = extractSchemaTypes(document);
+  const schemaData = collectSchemaData(document);
+  const schemaTypes = schemaData.types;
   const dominantKeyword = extractDominantKeyword(bodyText);
   const keywordRegex = dominantKeyword ? new RegExp(`\\b${escapeRegex(dominantKeyword)}\\b`, 'gi') : null;
   const keywordOccurrences = keywordRegex ? (bodyText.match(keywordRegex) ?? []).length : 0;
@@ -44,6 +48,7 @@ export function extractMetrics(html = '', url = '') {
   const altCoverage = imageCount ? imagesWithAlt / imageCount : 1;
 
   const listCount = document.querySelectorAll('ul, ol').length;
+  const tableCount = document.querySelectorAll('table').length;
 
   const summaryQuality = classifySummaryIntro(paragraphs[0] ?? '');
   const definitionClarity = classifyDefinition(bodyText, dominantKeyword, title);
@@ -54,6 +59,73 @@ export function extractMetrics(html = '', url = '') {
   const redundancyScore = calculateRedundancyScore(sentences);
   const syllableCount = countSyllables(bodyText);
   const readabilityScore = calculateFleschKincaid(wordCount, sentenceCount, syllableCount);
+  const summaryTldrPresent = detectSummaryBlock(document);
+  const qaBlocksPresent = qaCoverage !== 'none';
+  const shortChunkedParagraphs = avgParagraphLength <= 120;
+  const listsTablesPresent = listCount > 0 || tableCount > 0;
+  const canonicalEntityHubs = detectEntityHubLinks(document);
+  const naturalAnchorText = evaluateNaturalAnchorText(document);
+  const cleanUrlStructure = isCleanUrl(url);
+  const topicClusterInternalLinks = internalLinkCount >= 5;
+  const externalAuthoritativeCitations = detectAuthoritativeCitations(document);
+  const authorBioAvailable = detectAuthorBio(document);
+  const dateModifiedRecent = detectFreshDate(document);
+  const currentBodyContent = bodyText.includes(String(new Date().getFullYear()));
+  const disclaimersPresent = /\bdisclaimer\b|not (financial|investment) advice/i.test(bodyText);
+  const vagueStatementsRatio = countVagueStatements(bodyText, wordCount);
+  const noVagueStatements = vagueStatementsRatio < 0.04;
+  const noContradictions = !/\bcontradict\b|inconsistent facts?/i.test(bodyText);
+  const imageAuthorCitation =
+    schemaData.hasImageCitation || Boolean(document.querySelector('figure figcaption, meta[name="author"], meta[property="article:author"]'));
+  const msValidateMeta = document.querySelector('meta[name="msvalidate.01"]')?.getAttribute('content')?.trim() ?? null;
+
+  const geoSignals = {
+    structuredData: {
+      validSchema: schemaTypes.length > 0,
+      correctSchemaType: schemaData.hasArticleSchema,
+      entityRelationships: schemaData.hasEntityRelations,
+      breadcrumbSchema: schemaTypes.includes('BreadcrumbList') || Boolean(document.querySelector('[aria-label="breadcrumb"]')),
+      imageAuthorCitationMetadata: imageAuthorCitation,
+    },
+    contentClarity: {
+      headingHierarchy: headingStructureQuality === 'strong',
+      summaryTldrPresent: summaryQuality === 'strong' || summaryTldrPresent,
+      qaBlocksPresent,
+      shortChunkedParagraphs,
+      listsTablesPresent,
+    },
+    entityArchitecture: {
+      topicClusterInternalLinks,
+      canonicalEntityHubs,
+      naturalAnchorText,
+      cleanUrlStructure,
+    },
+    technicalGeo: {
+      llmsTxtPresent: Boolean(siteSignals.llmsTxtPresent),
+      robotsAllowsLlm: siteSignals.robotsAllowsAll,
+      indexnowKeyPresent: Boolean(siteSignals.indexNowEndpointOk),
+      serverSideRendering: detectServerSideRendering(document),
+      lightweightHtml: htmlBytes <= 350_000,
+      sitemapLastmodCorrect: siteSignals.sitemapLastmodRecent,
+      correctStatusCodes: typeof statusCode === 'number' ? statusCode >= 200 && statusCode < 400 : true,
+    },
+    authoritySignals: {
+      authorSchema: schemaData.hasAuthor,
+      authorBioAvailable,
+      externalAuthoritativeCitations,
+      firstPartyDataPresent: textHasFirstPartySignals(bodyText),
+      factualTone: factualDensity >= 3,
+    },
+    freshness: {
+      dateModifiedRecent,
+      currentBodyContent,
+    },
+    safety: {
+      noContradictions,
+      disclaimersPresent,
+      noVagueStatements,
+    },
+  };
 
   return {
     wordCount,
@@ -76,10 +148,13 @@ export function extractMetrics(html = '', url = '') {
     qaCoverage,
     sectionAlignment,
     factualDensity,
+    factsPer100: factualDensity,
     redundancyScore,
     readabilityScore,
     dominantKeyword,
     introSample,
+    geoSignals,
+    msValidateMeta,
   };
 }
 
@@ -195,18 +270,51 @@ function estimateSyllables(word) {
   return matches ? Math.max(matches.length, 1) : 1;
 }
 
-function extractSchemaTypes(document) {
+function collectSchemaData(document) {
   const types = new Set();
+  let hasEntityRelations = false;
+  let hasAuthor = false;
+  let hasImageCitation = false;
+  let hasArticleSchema = false;
+
+  const visitNode = (entry) => {
+    if (!entry) return;
+    const type = entry['@type'];
+    if (type) {
+      if (Array.isArray(type)) {
+        type.forEach((value) => registerSchemaType(value));
+      } else if (typeof type === 'string') {
+        registerSchemaType(type);
+      }
+    }
+    if (entry.sameAs || entry.mentions || entry.knowsAbout || entry.subjectOf) {
+      hasEntityRelations = true;
+    }
+    if (entry.author || entry.creator) {
+      hasAuthor = true;
+    }
+    if (entry.image && entry.image.author) {
+      hasImageCitation = true;
+    }
+  };
+
+  function registerSchemaType(value) {
+    if (!value) return;
+    types.add(value);
+    if (/article|newsarticle|blogposting|howto|faqpage|webpage/i.test(value)) {
+      hasArticleSchema = true;
+    }
+    if (/breadcrumblist/i.test(value)) {
+      types.add('BreadcrumbList');
+    }
+  }
+
   document.querySelectorAll('script[type="application/ld+json"]').forEach((script) => {
     try {
       const data = JSON.parse(script.textContent ?? '{}');
-      if (Array.isArray(data)) {
-        data.forEach((entry) => collectSchemaType(entry, types));
-      } else {
-        collectSchemaType(data, types);
-      }
+      traverseSchemaNode(data, visitNode);
     } catch {
-      // ignore malformed JSON-LD
+      // ignore
     }
   });
 
@@ -214,20 +322,29 @@ function extractSchemaTypes(document) {
     const value = node.getAttribute('itemtype');
     if (value) {
       const type = value.split('/').pop();
-      if (type) types.add(type);
+      registerSchemaType(type);
+    }
+    if (node.querySelector('[itemprop="author"]')) {
+      hasAuthor = true;
     }
   });
 
-  return Array.from(types);
+  return {
+    types: Array.from(types).filter(Boolean),
+    hasEntityRelations,
+    hasAuthor,
+    hasImageCitation,
+    hasArticleSchema,
+  };
 }
 
-function collectSchemaType(entry, set) {
+function traverseSchemaNode(entry, visitor) {
   if (!entry) return;
-  const type = entry['@type'];
-  if (Array.isArray(type)) {
-    type.forEach((value) => value && set.add(value));
-  } else if (typeof type === 'string') {
-    set.add(type);
+  visitor(entry);
+  if (Array.isArray(entry)) {
+    entry.forEach((item) => traverseSchemaNode(item, visitor));
+  } else if (typeof entry === 'object') {
+    Object.values(entry).forEach((value) => traverseSchemaNode(value, visitor));
   }
 }
 
@@ -242,8 +359,7 @@ function extractDominantKeyword(text) {
     if (stopWords.has(word)) return;
     counts[word] = (counts[word] || 0) + 1;
   });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  return sorted[0]?.[0] ?? '';
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
 }
 
 function evaluateHeadingStructure(headings) {
@@ -264,8 +380,79 @@ function evaluateHeadingStructure(headings) {
   return status;
 }
 
-function getIntroSample(text) {
-  return text.split(/\s+/).slice(0, 100).join(' ');
+function detectSummaryBlock(document) {
+  if (document.querySelector('[data-summary], .summary, .key-takeaways, .tldr')) return true;
+  return /\bTL;DR\b/i.test(document.body?.textContent ?? '');
+}
+
+function detectEntityHubLinks(document) {
+  const anchors = Array.from(document.querySelectorAll('nav a, header a, footer a'));
+  return anchors.some((anchor) => /about|team|company|leadership|newsroom|press|insights/i.test(anchor.textContent ?? ''));
+}
+
+function evaluateNaturalAnchorText(document) {
+  const anchors = Array.from(document.querySelectorAll('a[href]'));
+  if (!anchors.length) return false;
+  const descriptive = anchors.filter((anchor) => {
+    const text = (anchor.textContent ?? '').trim();
+    if (!text || /^https?:/i.test(text)) return false;
+    return text.split(/\s+/).length >= 2;
+  });
+  return descriptive.length / anchors.length >= 0.6;
+}
+
+function detectAuthoritativeCitations(document) {
+  const anchors = Array.from(document.querySelectorAll('a[href]'));
+  if (!anchors.length) return false;
+  return anchors.some((anchor) => /\.gov|\.edu|who\.int|un\.org/i.test(anchor.getAttribute('href') ?? ''));
+}
+
+function detectAuthorBio(document) {
+  return Boolean(
+    document.querySelector('.author-bio, .author, .byline, [rel="author"], [itemprop="author"], [class*="author"]')
+  );
+}
+
+function isCleanUrl(url = '') {
+  if (!url) return true;
+  try {
+    const parsed = new URL(url);
+    if (parsed.search || parsed.hash) return false;
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    return segments.length <= 3;
+  } catch {
+    return true;
+  }
+}
+
+function detectServerSideRendering(document) {
+  const hasHydration = document.querySelector('[data-server-rendered="true"]');
+  if (hasHydration) return true;
+  const nextData = document.querySelector('#__NEXT_DATA__');
+  if (nextData) return false;
+  const scriptCount = document.querySelectorAll('script').length;
+  const textCoverage = (document.body?.textContent ?? '').trim().length;
+  return textCoverage > 0 && scriptCount < 40;
+}
+
+function detectFreshDate(document) {
+  const node = document.querySelector('meta[property="article:modified_time"], meta[name="modified"], time[datetime]');
+  if (!node) return null;
+  const value = node.getAttribute('content') || node.getAttribute('datetime');
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return Date.now() - parsed.getTime() <= 1000 * 60 * 60 * 24 * 120;
+}
+
+function countVagueStatements(text, wordCount) {
+  if (!wordCount) return 0;
+  const matches = text.match(/\b(maybe|possibly|might|could|appears|roughly)\b/gi) ?? [];
+  return matches.length / wordCount;
+}
+
+function textHasFirstPartySignals(text) {
+  return /\bour data\b|\bour research\b|\binternal findings\b/i.test(text);
 }
 
 function isInternalLink(href, baseUrl) {
@@ -280,6 +467,10 @@ function isInternalLink(href, baseUrl) {
   } catch {
     return false;
   }
+}
+
+function getIntroSample(text) {
+  return text.split(/\s+/).slice(0, 100).join(' ');
 }
 
 function escapeRegex(value) {
