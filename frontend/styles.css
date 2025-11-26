@@ -517,6 +517,74 @@ textarea {
   color: inherit;
 }
 
+.skeleton {
+  animation: shimmer 1.4s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.05)
+  );
+  background-size: 200% 100%;
+  border-radius: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.skeleton-card {
+  min-height: 120px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 999px;
+  background-color: rgba(148, 163, 184, 0.25);
+}
+
+.skeleton-line--lg {
+  height: 24px;
+}
+
+.skeleton-line--sm {
+  height: 8px;
+}
+
+.skeleton-block {
+  height: 70px;
+  border-radius: 0.85rem;
+  background-color: rgba(148, 163, 184, 0.2);
+}
+
+.skeleton-list,
+.skeleton-table,
+.skeleton-metrics,
+.pillar-skeleton {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.pillar-skeleton {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.skeleton-visible {
+  opacity: 1;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 .score-card.dual {
   border: none;
   background: var(--gradient);

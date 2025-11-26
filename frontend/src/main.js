@@ -50,6 +50,15 @@ const elements = {
   bingChecks: document.getElementById('bingChecksList'),
   inputPanel: document.querySelector('.input-panel'),
   resultsPanel: document.querySelector('.results-panel'),
+  skeletons: {
+    seoScore: document.getElementById('seoScoreSkeleton'),
+    geoScore: document.getElementById('geoScoreSkeleton'),
+    performance: document.getElementById('performanceSkeleton'),
+    seoPillars: document.getElementById('seoPillarsSkeleton'),
+    geoPillars: document.getElementById('geoPillarsSkeleton'),
+    recommendations: document.getElementById('recommendationsSkeleton'),
+    snapshot: document.getElementById('snapshotSkeleton'),
+  },
 };
 const heroJumpButtons = document.querySelectorAll('[data-jump]');
 const subscriptionModal = document.getElementById('subscriptionModal');
@@ -166,6 +175,17 @@ function updateStickyScores(seoScore, geoScore) {
   elements.stickyGeoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
 }
 
+function setSkeletonVisibility(isVisible) {
+  const method = isVisible ? 'add' : 'remove';
+  Object.values(elements.skeletons).forEach((node) => {
+    if (!node) return;
+    node.classList[method]('skeleton-visible');
+  });
+  document.querySelectorAll('.score-card, .pillar-grid, .recommendation-list, .snapshot-grid, .performance-grid').forEach((node) => {
+    node.classList.toggle('is-loading', isVisible);
+  });
+}
+
 /* ANALYSIS ----------------------------------------------------------------- */
 async function handleAnalyze() {
   const ctx = {
@@ -178,6 +198,7 @@ async function handleAnalyze() {
 
   try {
     setAnalysisState(true);
+    setSkeletonVisibility(true);
     const payload = buildAnalysisPayload(ctx);
     const fetched = await runAnalysis(payload);
     const html = fetched.html ?? '';
@@ -215,6 +236,7 @@ async function handleAnalyze() {
     }
   } finally {
     setAnalysisState(false);
+    setSkeletonVisibility(false);
   }
 }
 
@@ -636,6 +658,7 @@ function renderResults(result) {
   renderMicrosoftChecks(microsoftBingChecks);
   updateBenchmarks(result);
   renderSnapshotTable(result);
+  setSkeletonVisibility(false);
 }
 
 function renderPillars(seoPillars = [], geoPillars = [], seoScore = 0, geoScore = 0) {

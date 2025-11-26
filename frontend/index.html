@@ -134,11 +134,21 @@
           <div class="results-column results-column--primary">
             <div class="scores-grid">
               <article class="score-card" id="seoScoreCard">
+                <div class="skeleton skeleton-card" id="seoScoreSkeleton">
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton-line skeleton-line--sm"></div>
+                </div>
                 <p class="score-card__eyebrow">🔍 SEO Score</p>
                 <p class="score-card__value" id="seoScore">--</p>
                 <p class="score-card__desc">Technical + On-Page + Content Quality</p>
               </article>
               <article class="score-card" id="geoScoreCard">
+                <div class="skeleton skeleton-card" id="geoScoreSkeleton">
+                  <div class="skeleton-line"></div>
+                  <div class="skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton-line skeleton-line--sm"></div>
+                </div>
                 <p class="score-card__eyebrow">🧠 GEO Score</p>
                 <p class="score-card__value" id="geoScore">--</p>
                 <p class="score-card__desc">LLM Comprehension + Prompt Alignment + AI Discovery</p>
@@ -165,6 +175,12 @@
               <div class="performance-grid" id="performanceGrid">
                 <p class="helper-text small">Run a URL analysis to view live response time, payload size, and request counts.</p>
               </div>
+              <div class="skeleton skeleton-metrics" id="performanceSkeleton">
+                <div class="skeleton-block"></div>
+                <div class="skeleton-block"></div>
+                <div class="skeleton-block"></div>
+                <div class="skeleton-block"></div>
+              </div>
             </article>
 
             <div class="pillars" id="pillarBreakdown">
@@ -174,6 +190,11 @@
                   <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
                 </div>
                 <div class="pillar-grid" id="seoPillars"></div>
+                <div class="pillar-skeleton" id="seoPillarsSkeleton">
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                </div>
               </section>
               <section class="pillar-group">
                 <div class="pillar-group__header">
@@ -181,6 +202,11 @@
                   <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
                 </div>
                 <div class="pillar-grid" id="geoPillars"></div>
+                <div class="pillar-skeleton" id="geoPillarsSkeleton">
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                  <div class="skeleton skeleton-card"></div>
+                </div>
               </section>
             </div>
           </div>
@@ -222,6 +248,11 @@
                 </div>
               </div>
               <ul class="recommendation-list" id="recommendationList"></ul>
+              <div class="skeleton skeleton-list" id="recommendationsSkeleton">
+                <div class="skeleton-line skeleton-line--lg"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+              </div>
             </div>
 
             <div class="type-specific" id="typeSpecificFindings">
@@ -233,6 +264,12 @@
               <h3>Analysis Snapshot</h3>
               <div class="snapshot-grid" id="analysisSnapshot">
                 <p class="helper-text small">Run an analysis to view real metrics, schema detection, tone insights, and more.</p>
+              </div>
+              <div class="skeleton skeleton-table" id="snapshotSkeleton">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
               </div>
             </div>
           </div>
