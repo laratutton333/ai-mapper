@@ -162,6 +162,42 @@ textarea {
   font-size: 0.75rem;
 }
 
+.empty-copy {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.ui-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-icon__svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 640px) {
+  .ui-icon__svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.label-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.score-card__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .chip-group {
   display: flex;
   flex-wrap: wrap;
@@ -332,6 +368,9 @@ textarea {
   letter-spacing: 0.08em;
   color: var(--muted);
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .sticky-score__value {
@@ -546,6 +585,12 @@ textarea {
 .bing-check__label {
   font-weight: 600;
   color: #f8fafc;
+}
+
+.bing-check__note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .status-pill {
@@ -1150,4 +1195,11 @@ textarea {
 
 .collapsible-panel--open .pillar-grid {
   margin-top: 1rem;
+}
+.recommendations__header h3 {
+  margin: 0;
+}
+
+.recommendation-group__title {
+  margin: 0 0 0.35rem;
 }

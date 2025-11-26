@@ -116,18 +116,24 @@
         </div>
         <div id="statusBanner" class="status-banner hidden" role="status" aria-live="polite"></div>
         <div id="empty-state" class="empty-state-card" aria-live="polite">
-          <span class="empty-state__icon">✨</span>
+          <span data-icon="sparkles" data-label="Awaiting analysis" class="empty-state__icon"></span>
           <p class="empty-state__title">Run an analysis to view SEO + GEO breakdowns, verification checks, and insights.</p>
         </div>
         <div id="results-container" class="results-container">
           <div id="stickyHeader" class="sticky-header" aria-live="polite">
             <div class="sticky-header__scores">
               <div class="sticky-score">
-                <p class="sticky-score__label">SEO</p>
+                <p class="sticky-score__label label-with-icon">
+                  <span data-icon="search" data-label="SEO Score"></span>
+                  <span>SEO</span>
+                </p>
                 <p class="sticky-score__value" id="stickySeoScore">--</p>
               </div>
               <div class="sticky-score">
-                <p class="sticky-score__label">GEO</p>
+                <p class="sticky-score__label label-with-icon">
+                  <span data-icon="globe" data-label="GEO Score"></span>
+                  <span>GEO</span>
+                </p>
                 <p class="sticky-score__value" id="stickyGeoScore">--</p>
               </div>
             </div>
@@ -141,7 +147,10 @@
               <div class="skeleton-line skeleton-line--lg"></div>
               <div class="skeleton-line skeleton-line--sm"></div>
             </div>
-            <p class="score-card__eyebrow">🔍 SEO Score</p>
+            <p class="score-card__eyebrow label-with-icon">
+              <span data-icon="search" data-label="SEO Score"></span>
+              <span>SEO Score</span>
+            </p>
             <p class="score-card__value" id="seoScore">--</p>
             <p class="score-card__desc">Technical + on-page structure and content quality.</p>
           </article>
@@ -152,13 +161,19 @@
               <div class="skeleton-line skeleton-line--lg"></div>
               <div class="skeleton-line skeleton-line--sm"></div>
             </div>
-            <p class="score-card__eyebrow">🧠 GEO Score</p>
+            <p class="score-card__eyebrow label-with-icon">
+              <span data-icon="globe" data-label="GEO Score"></span>
+              <span>GEO Score</span>
+            </p>
             <p class="score-card__value" id="geoScore">--</p>
             <p class="score-card__desc">LLM comprehension, prompt alignment, and AI discoverability.</p>
           </article>
 
           <article class="results-card score-card dual hover-card" data-column="left">
-            <p class="score-card__eyebrow">📊 Gap Analysis</p>
+            <p class="score-card__eyebrow label-with-icon">
+              <span data-icon="barChart" data-label="Gap Analysis"></span>
+              <span>Gap Analysis</span>
+            </p>
             <p class="score-card__value" id="gapScore">--</p>
             <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
           </article>
@@ -166,7 +181,10 @@
           <article class="results-card score-card performance-card hover-card" data-column="left" id="performancePanel">
             <div class="performance-card__heading">
               <div>
-                <p class="performance-card__eyebrow">Speed Snapshot</p>
+                <p class="performance-card__eyebrow label-with-icon">
+                  <span data-icon="activity" data-label="Speed Snapshot"></span>
+                  <span>Speed Snapshot</span>
+                </p>
                 <p class="performance-card__title">Basic fetch metrics based on a single request.</p>
               </div>
               <div class="performance-card__score">
@@ -186,7 +204,10 @@
           <section class="results-card collapsible-card hover-card" data-column="left">
             <button class="collapsible-toggle" type="button" data-collapse-target="seoPillarsPanel" aria-expanded="true">
               <div class="collapsible-copy">
-                <p class="pillar-group__title">SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</p>
+                <p class="pillar-group__title label-with-icon">
+                  <span data-icon="search" data-label="SEO Breakdown"></span>
+                  <span>SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</span>
+                </p>
                 <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
               </div>
               <span class="collapsible-caret" aria-hidden="true"></span>
@@ -204,7 +225,10 @@
           <section class="results-card collapsible-card hover-card" data-column="right">
             <button class="collapsible-toggle" type="button" data-collapse-target="geoPillarsPanel" aria-expanded="true">
               <div class="collapsible-copy">
-                <p class="pillar-group__title">GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</p>
+                <p class="pillar-group__title label-with-icon">
+                  <span data-icon="globe" data-label="GEO Breakdown"></span>
+                  <span>GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</span>
+                </p>
                 <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
               </div>
               <span class="collapsible-caret" aria-hidden="true"></span>
@@ -220,14 +244,18 @@
           </section>
 
           <section class="results-card bing-card hover-card" data-column="right" id="bingVerification">
-            <div class="bing-card__header">
+            <div class="bing-card__header label-with-icon">
+              <span data-icon="shieldCheck" data-label="Microsoft and Bing Verification"></span>
               <h3>Microsoft/Bing Verification</h3>
             </div>
             <ul class="bing-checks-list" id="bingChecksList"></ul>
           </section>
 
           <div class="results-card benchmarks hover-card" data-column="right" id="benchmarkComparison">
-            <h3>Industry Benchmark</h3>
+            <h3 class="label-with-icon">
+              <span data-icon="lineChart" data-label="Industry Benchmark"></span>
+              <span>Industry Benchmark</span>
+            </h3>
             <div class="benchmark-cards">
               <div class="benchmark-card">
                 <p>SEO vs industry average</p>
@@ -244,7 +272,10 @@
 
           <div class="results-card recommendations hover-card" data-column="right">
             <div class="recommendations__header">
-              <h3>Recommendations</h3>
+              <h3 class="label-with-icon">
+                <span data-icon="list" data-label="Recommendations"></span>
+                <span>Recommendations</span>
+              </h3>
               <div class="chip-group" data-field="recommendation-view">
                 <button class="chip chip--active" data-value="combined">Combined</button>
                 <button class="chip" data-value="seo">SEO</button>
@@ -260,12 +291,18 @@
           </div>
 
           <div class="results-card type-specific hover-card" data-column="right" id="typeSpecificFindings">
-            <h3>Content Type-Specific Findings</h3>
+            <h3 class="label-with-icon">
+              <span data-icon="pin" data-label="Content Type Findings"></span>
+              <span>Content Type-Specific Findings</span>
+            </h3>
             <ul></ul>
           </div>
 
           <div class="results-card analysis-log hover-card" data-column="right">
-            <h3>Analysis Snapshot</h3>
+            <h3 class="label-with-icon">
+              <span data-icon="table" data-label="Analysis Snapshot"></span>
+              <span>Analysis Snapshot</span>
+            </h3>
             <div class="snapshot-grid" id="analysisSnapshot"></div>
             <div class="skeleton skeleton-table" id="snapshotSkeleton">
               <div class="skeleton-line"></div>
@@ -275,6 +312,7 @@
             </div>
           </div>
         </div>
+      </div>
       </section>
     </main>
 

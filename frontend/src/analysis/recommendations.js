@@ -2,57 +2,57 @@ const SEO_RULES = [
   {
     id: 'schemaNews',
     text: 'Add NewsArticle schema markup so AI news surfaces recognize this release.',
-    priority: '🎯 Critical',
+    priority: 'Critical',
     condition: (metrics, ctx) => ctx.contentType === 'pressRelease' && !metrics.schemaTypes.includes('NewsArticle'),
   },
   {
     id: 'schemaFaq',
     text: 'Add FAQ schema to unlock multi-framework visibility for conversational queries.',
-    priority: 'High',
+    priority: 'High Priority',
     condition: (metrics, ctx) => ['blogArticle', 'productPage', 'howTo'].includes(ctx.contentType) && !metrics.schemaTypes.includes('FAQPage'),
   },
   {
     id: 'productSchema',
     text: 'Include Product schema with Offer data for richer shopping experiences.',
-    priority: 'High',
+    priority: 'High Priority',
     condition: (metrics, ctx) => ctx.contentType === 'productPage' && !metrics.schemaTypes.includes('Product'),
   },
   {
     id: 'titleLength',
     text: 'Optimize the title tag to 50–60 characters for SERP pixel control.',
-    priority: 'Medium',
+    priority: 'Medium Priority',
     condition: (metrics, ctx) =>
       ctx.contentType !== 'pressRelease' && metrics.titleLength && (metrics.titleLength < 50 || metrics.titleLength > 60),
   },
   {
     id: 'metaDescription',
     text: 'Rewrite the meta description to 150–160 characters with a clear CTA.',
-    priority: 'Medium',
+    priority: 'Medium Priority',
     condition: (metrics) => metrics.metaLength && (metrics.metaLength < 140 || metrics.metaLength > 170),
   },
   {
     id: 'keywordIntro',
     text: 'Introduce the dominant keyword within the first 100 words.',
-    priority: 'High',
+    priority: 'High Priority',
     condition: (metrics) => metrics.keywordInIntro === false,
   },
   {
     id: 'internalLinks',
     text: 'Add internal links to supporting assets to lift crawl depth and topical authority.',
-    priority: 'Medium',
+    priority: 'Medium Priority',
     condition: (metrics) => metrics.linkCount < 3,
   },
   {
     id: 'speed',
     text: 'Improve page load speed by compressing media and deferring heavy scripts.',
-    priority: 'High',
+    priority: 'High Priority',
     condition: (metrics, ctx) =>
       ctx.contentType === 'pressRelease' ? metrics.pageSpeedEstimate < 65 : metrics.pageSpeedEstimate < 75,
   },
   {
     id: 'wordCount',
     text: 'Expand the narrative beyond 800 words to increase depth and SERP coverage.',
-    priority: 'Medium',
+    priority: 'Medium Priority',
     condition: (metrics) => metrics.wordCount < 800,
   },
 ];
@@ -61,44 +61,44 @@ const GEO_RULES = [
   {
     id: 'entityDefinitions',
     text: 'Add explicit entity definitions (“X is a…”) within the opening section for AI clarity.',
-    priority: '🎯 Critical',
+    priority: 'Critical',
     condition: (metrics) => metrics.entityDefinitions < 2,
   },
   {
     id: 'infoDensity',
     text: 'Increase information density above 5% by layering in stats, dates, and data points.',
-    priority: 'High',
+    priority: 'High Priority',
     condition: (metrics) => metrics.factsPer100 < 5,
   },
   {
     id: 'qaFormat',
     text: 'Convert key talking points into a mini Q&A block to mimic prompt-ready snippets.',
-    priority: 'High',
+    priority: 'High Priority',
     condition: (metrics, ctx) => ctx.contentType !== 'pressRelease' && metrics.qaCount < 3,
   },
   {
     id: 'conversationalTone',
     text: 'Infuse more conversational markers (“you”, “we”, natural questions) for GEO tone.',
-    priority: 'Medium',
+    priority: 'Medium Priority',
     condition: (metrics, ctx) => ctx.contentType !== 'pressRelease' && metrics.conversationalMarkers < 10,
   },
   {
     id: 'quotable',
     text: 'Craft quotable soundbites under 20 words with attribution for AI citation.',
-    priority: 'Medium',
+    priority: 'Medium Priority',
     condition: (metrics) => metrics.quotableStatementsRatio < 0.4,
   },
   {
     id: 'attribution',
     text: 'Add clear attribution (“Name, Title said…”) to boost trust and citation readiness.',
-    priority: 'Medium',
+    priority: 'Medium Priority',
     condition: (metrics, ctx) =>
       ctx.contentType === 'pressRelease' ? metrics.attributionCount < 1 : metrics.attributionCount < 2,
   },
   {
     id: 'voiceSearch',
     text: 'Add voice-search friendly questions beginning with who/what/when/where/why/how.',
-    priority: 'High',
+    priority: 'High Priority',
     condition: (metrics, ctx) => ctx.contentType !== 'pressRelease' && metrics.voicePatternScore < 70,
   },
   {

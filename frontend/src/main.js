@@ -1,5 +1,6 @@
 import { INDUSTRY_BENCHMARKS, summarizeBenchmark } from './analysis/benchmarks.js';
 import { buildRecommendations, getTypeSpecificFindings } from './analysis/recommendations.js';
+import { applyIcons } from './icons.js';
 
 // Prefer explicit global override (set window.AI_MAPPER_API_URL before loading this script)
 // otherwise fall back to the deployed backend URL when running on Render or relative path locally.
@@ -113,6 +114,7 @@ initCollapsibleControls();
 updateStickyScores('--', '--');
 setResultsVisibility(false);
 setExportVisibility(false);
+applyIcons();
 
 function initChipGroup(fieldName, callback) {
   const group = document.querySelector(`.chip-group[data-field="${fieldName}"]`);
@@ -723,6 +725,7 @@ function renderResults(result) {
   updateBenchmarks(result);
   renderSnapshotTable(result);
   setResultsVisibility(true);
+  applyIcons(elements.resultsContainer);
   setExportVisibility(true);
   setSkeletonVisibility(false);
 }
@@ -742,7 +745,7 @@ function renderPillarSection(container, list = []) {
   if (!container) return;
   container.innerHTML = '';
   if (!list.length) {
-    container.innerHTML = '<p class="helper-text small">No data yet.</p>';
+    container.innerHTML = '<p class="empty-copy">No data yet.</p>';
     return;
   }
   list.forEach((pillar) => {
@@ -772,9 +775,9 @@ function renderRecommendations(recommendations) {
   const list =
     view === 'seo' ? recommendations.seo : view === 'geo' ? recommendations.geo : recommendations.combined;
   const groups = {
-    critical: { label: '🔥 Critical Fixes', items: [] },
-    high: { label: '⚡ High Priority', items: [] },
-    medium: { label: '👍 Medium Priority', items: [] },
+    critical: { label: 'Critical fixes', icon: 'flame', items: [] },
+    high: { label: 'High priority', icon: 'zap', items: [] },
+    medium: { label: 'Medium priority', icon: 'list', items: [] },
   };
 
   list.forEach((item) => {
@@ -791,14 +794,22 @@ function renderRecommendations(recommendations) {
     appended = true;
     const wrapper = document.createElement('li');
     wrapper.className = 'recommendation-group';
-    wrapper.innerHTML = `<p class="recommendation-group__title">${group.label}</p>`;
+    wrapper.innerHTML = `
+      <p class="recommendation-group__title label-with-icon">
+        <span data-icon="${group.icon}" data-label="${group.label}"></span>
+        <span>${group.label}</span>
+      </p>`;
     const sublist = document.createElement('ul');
     sublist.className = 'recommendation-group__list';
     group.items.forEach((item) => {
       const li = document.createElement('li');
       li.className = 'recommendation-item';
+      const iconName = key === 'critical' ? 'flame' : key === 'high' ? 'zap' : 'list';
       li.innerHTML = `
-        <span class="priority">${item.priority}</span>
+        <span class="priority label-with-icon">
+          <span data-icon="${iconName}" data-label="${item.priority}"></span>
+          <span>${item.priority}</span>
+        </span>
         <div>
           <p>${item.text}</p>
         </div>
@@ -811,7 +822,7 @@ function renderRecommendations(recommendations) {
 
   if (!appended) {
     const empty = document.createElement('li');
-    empty.className = 'helper-text';
+    empty.className = 'empty-copy';
     empty.textContent = 'No recommendations available.';
     elements.recommendationList.appendChild(empty);
   }
@@ -819,7 +830,7 @@ function renderRecommendations(recommendations) {
 
 function classifyPriority(priority = '') {
   const value = priority.toLowerCase();
-  if (value.includes('critical') || value.includes('🎯')) return 'critical';
+  if (value.includes('critical')) return 'critical';
   if (value.includes('high')) return 'high';
   return 'medium';
 }
@@ -888,7 +899,7 @@ function renderPerformance(performance) {
   if (!performance) {
     elements.performanceScore.textContent = '--';
     elements.performanceGrid.innerHTML =
-      '<p class="helper-text small">URL fetching is required to display performance metrics.</p>';
+      '<p class="empty-copy">URL fetching is required to display performance metrics.</p>';
     return;
   }
 
@@ -941,7 +952,7 @@ function renderPerformance(performance) {
 function renderMicrosoftChecks(checks) {
   if (!elements.bingChecks) return;
   if (!checks) {
-    elements.bingChecks.innerHTML = '<li class="helper-text small">Run an analysis to view verification status.</li>';
+    elements.bingChecks.innerHTML = '<li class="empty-copy">Run an analysis to view verification status.</li>';
     return;
   }
 
@@ -990,15 +1001,20 @@ function renderMicrosoftChecks(checks) {
     .map((item) => {
       const statusClass = item.warn ? 'status-pill--warn' : item.status ? 'status-pill--pass' : 'status-pill--fail';
       const statusLabel = item.warn ? 'Unknown' : item.status ? 'Pass' : 'Missing';
+      const iconName = item.warn ? 'infoCircle' : item.status ? 'shieldCheck' : 'flame';
       return `
         <li class="bing-check">
-          <span class="bing-check__label">${item.label}</span>
+          <div class="bing-check__info label-with-icon">
+            <span data-icon="${iconName}" data-label="${item.label}"></span>
+            <span class="bing-check__label">${item.label}</span>
+          </div>
           <span class="status-pill ${statusClass}">${statusLabel}</span>
-          <p class="helper-text small">${item.value}</p>
+          <p class="bing-check__note">${item.value}</p>
         </li>
       `;
     })
     .join('');
+  applyIcons(elements.bingChecks);
 }
 
 function updateBenchmarks(result) {

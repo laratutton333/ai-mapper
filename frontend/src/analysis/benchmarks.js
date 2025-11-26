@@ -11,38 +11,26 @@ export const INDUSTRY_BENCHMARKS = {
   nonProfit: { name: 'Non-Profit', seo: { min: 62, max: 70 }, geo: { min: 54, max: 62 } },
 };
 
-const STATUS_MAP = [
-  { threshold: 11, label: '📉 Well below average', className: 'risk' },
-  { threshold: 6, label: '↘️ Below average', className: 'challenged' },
-  { threshold: -5, label: '→ Average', className: '' },
-  { threshold: -9, label: '↗️ Above average', className: '' }, // placeholder, overwritten below
-];
-
 export function summarizeBenchmark(score, industryRange) {
   if (!industryRange) {
-    return { delta: 0, label: 'No benchmark', emoji: '', className: '' };
+    return { delta: 0, label: 'No benchmark', className: '', average: 0 };
   }
   const avg = Math.round((industryRange.min + industryRange.max) / 2);
   const delta = score - avg;
-  let label = '→ Average';
-  let emoji = '→';
+  let label = 'Average';
   let className = '';
 
   if (delta >= 10) {
-    label = '📈 Well above average';
-    emoji = '📈';
+    label = 'Well above average';
   } else if (delta >= 5) {
-    label = '↗️ Above average';
-    emoji = '↗️';
+    label = 'Above average';
   } else if (delta <= -11) {
-    label = '📉 Well below average';
-    emoji = '📉';
+    label = 'Well below average';
     className = 'risk';
   } else if (delta <= -6) {
-    label = '↘️ Below average';
-    emoji = '↘️';
+    label = 'Below average';
     className = 'challenged';
   }
 
-  return { delta, label, emoji, className, average: avg };
+  return { delta, label, className, average: avg };
 }

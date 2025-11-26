@@ -7,7 +7,7 @@ export function extractMetrics(html = '', url = '', options = {}) {
   const document = dom.window.document;
   const htmlBytes = Buffer.byteLength(html ?? '', 'utf8');
 
-  const bodyText = normalizeWhitespace(document.body?.textContent ?? '');
+  const bodyText = normalizeWhitespace(stripEmojis(document.body?.textContent ?? ''));
   const wordCount = countWords(bodyText);
   const sentences = splitSentences(bodyText);
   const sentenceCount = sentences.length || 1;
@@ -162,6 +162,10 @@ function normalizeWhitespace(text) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function stripEmojis(text = '') {
+  return text.replace(/\p{Extended_Pictographic}/gu, '');
+}
+
 function countWords(text) {
   const matches = text.match(/\b[\w’-]+\b/gu);
   return matches ? matches.length : 0;
@@ -177,11 +181,11 @@ function splitSentences(text) {
 
 function extractParagraphs(document) {
   const paragraphs = Array.from(document.querySelectorAll('p'))
-    .map((node) => normalizeWhitespace(node.textContent ?? ''))
+    .map((node) => normalizeWhitespace(stripEmojis(node.textContent ?? '')))
     .filter(Boolean);
   if (paragraphs.length) return paragraphs;
 
-  const fallback = normalizeWhitespace(document.body?.textContent ?? '');
+  const fallback = normalizeWhitespace(stripEmojis(document.body?.textContent ?? ''));
   return fallback.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
 }
 
