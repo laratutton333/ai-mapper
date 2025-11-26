@@ -108,7 +108,7 @@ body {
 
 .panel h2 {
   margin: 0 0 0.4rem;
-  color: #fef3c7;
+  color: #ffffff;
 }
 
 .panel__intro {
@@ -230,7 +230,7 @@ textarea {
 
 .results-panel h3 {
   margin: 1.25rem 0 0.5rem;
-  color: #fef9c3;
+  color: #ffffff;
   letter-spacing: 0.01em;
   font-size: 1.15rem;
 }
@@ -625,7 +625,7 @@ textarea {
   margin: 0;
   font-weight: 600;
   font-size: 1.15rem;
-  color: #fefce8;
+  color: #ffffff;
 }
 
 .pillar-group__subtitle {
@@ -776,7 +776,7 @@ textarea {
 .recommendation-group__title {
   margin: 0 0 0.35rem;
   font-weight: 600;
-  color: #fefce8;
+  color: #ffffff;
 }
 
 .recommendation-group__list {
