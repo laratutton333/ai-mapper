@@ -117,105 +117,111 @@
         </div>
         <div id="statusBanner" class="status-banner hidden" role="status" aria-live="polite"></div>
 
-        <div class="scores-grid">
-          <article class="score-card" id="seoScoreCard">
-            <p class="score-card__eyebrow">🔍 SEO Score</p>
-            <p class="score-card__value" id="seoScore">--</p>
-            <p class="score-card__desc">Technical + On-Page + Content Quality</p>
-          </article>
-          <article class="score-card" id="geoScoreCard">
-            <p class="score-card__eyebrow">🧠 GEO Score</p>
-            <p class="score-card__value" id="geoScore">--</p>
-            <p class="score-card__desc">LLM Comprehension + Prompt Alignment + AI Discovery</p>
-          </article>
-          <article class="score-card dual">
-            <p class="score-card__eyebrow">📊 Gap Analysis</p>
-            <p class="score-card__value" id="gapScore">--</p>
-            <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
-          </article>
-        </div>
+        <div class="results-layout">
+          <div class="results-column results-column--primary">
+            <div class="scores-grid">
+              <article class="score-card" id="seoScoreCard">
+                <p class="score-card__eyebrow">🔍 SEO Score</p>
+                <p class="score-card__value" id="seoScore">--</p>
+                <p class="score-card__desc">Technical + On-Page + Content Quality</p>
+              </article>
+              <article class="score-card" id="geoScoreCard">
+                <p class="score-card__eyebrow">🧠 GEO Score</p>
+                <p class="score-card__value" id="geoScore">--</p>
+                <p class="score-card__desc">LLM Comprehension + Prompt Alignment + AI Discovery</p>
+              </article>
+              <article class="score-card dual">
+                <p class="score-card__eyebrow">📊 Gap Analysis</p>
+                <p class="score-card__value" id="gapScore">--</p>
+                <p class="score-card__desc" id="gapNarrative">Awaiting analysis...</p>
+              </article>
+            </div>
 
-        <article class="score-card performance-card" id="performancePanel">
-          <div class="performance-card__heading">
-            <div>
-              <p class="performance-card__eyebrow">Speed Snapshot</p>
-              <p class="performance-card__title">Lightweight fetch metrics (response time, payload size, requests, largest image).</p>
-              <p class="speed-note">Not a full SEO or GEO performance grade.</p>
-            </div>
-            <div class="performance-card__score">
-              <p class="score-card__value" id="performanceScoreValue">--</p>
-              <span class="performance-card__total">/100</span>
-            </div>
-          </div>
-          <div class="performance-grid" id="performanceGrid">
-            <p class="helper-text small">Run a URL analysis to view live response time, payload size, and request counts.</p>
-          </div>
-        </article>
+            <article class="score-card performance-card" id="performancePanel">
+              <div class="performance-card__heading">
+                <div>
+                  <p class="performance-card__eyebrow">Speed Snapshot</p>
+                  <p class="performance-card__title">Lightweight fetch metrics (response time, payload size, requests, largest image).</p>
+                  <p class="speed-note">Not a full SEO or GEO performance grade.</p>
+                </div>
+                <div class="performance-card__score">
+                  <p class="score-card__value" id="performanceScoreValue">--</p>
+                  <span class="performance-card__total">/100</span>
+                </div>
+              </div>
+              <div class="performance-grid" id="performanceGrid">
+                <p class="helper-text small">Run a URL analysis to view live response time, payload size, and request counts.</p>
+              </div>
+            </article>
 
-        <section class="bing-card" id="bingVerification">
-          <div class="bing-card__header">
-            <h3>Microsoft/Bing Verification</h3>
-            <p class="helper-text small">Checks for msvalidate tags, IndexNow keys, llms.txt, and Bingbot access.</p>
-          </div>
-          <ul class="bing-checks-list" id="bingChecksList">
-            <li class="helper-text small">Run an analysis to view verification status.</li>
-          </ul>
-        </section>
-
-        <div class="pillars" id="pillarBreakdown">
-          <section class="pillar-group">
-            <div class="pillar-group__header">
-              <p class="pillar-group__title">SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</p>
-              <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
-            </div>
-            <div class="pillar-grid" id="seoPillars"></div>
-          </section>
-          <section class="pillar-group">
-            <div class="pillar-group__header">
-              <p class="pillar-group__title">GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</p>
-              <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
-            </div>
-            <div class="pillar-grid" id="geoPillars"></div>
-          </section>
-        </div>
-
-        <div class="benchmarks" id="benchmarkComparison">
-          <h3>Industry Benchmark</h3>
-          <div class="benchmark-cards">
-            <div class="benchmark-card">
-              <p>SEO vs Avg</p>
-              <p class="benchmark-value" id="seoBenchmark"></p>
-              <p class="benchmark-label" id="seoBenchmarkLabel"></p>
-            </div>
-            <div class="benchmark-card">
-              <p>GEO vs Avg</p>
-              <p class="benchmark-value" id="geoBenchmark"></p>
-              <p class="benchmark-label" id="geoBenchmarkLabel"></p>
+            <div class="pillars" id="pillarBreakdown">
+              <section class="pillar-group">
+                <div class="pillar-group__header">
+                  <p class="pillar-group__title">SEO Breakdown (Score: <span id="seoBreakdownScore">--</span>)</p>
+                  <p class="pillar-group__subtitle">Technical SEO + On-Page + Content Quality</p>
+                </div>
+                <div class="pillar-grid" id="seoPillars"></div>
+              </section>
+              <section class="pillar-group">
+                <div class="pillar-group__header">
+                  <p class="pillar-group__title">GEO Breakdown (Score: <span id="geoBreakdownScore">--</span>)</p>
+                  <p class="pillar-group__subtitle">Structured data, clarity, authority, freshness, and safety.</p>
+                </div>
+                <div class="pillar-grid" id="geoPillars"></div>
+              </section>
             </div>
           </div>
-        </div>
 
-        <div class="recommendations">
-          <div class="recommendations__header">
-            <h3>Recommendations</h3>
-            <div class="chip-group" data-field="recommendation-view">
-              <button class="chip chip--active" data-value="combined">Combined</button>
-              <button class="chip" data-value="seo">SEO</button>
-              <button class="chip" data-value="geo">GEO</button>
+          <div class="results-column results-column--secondary">
+            <section class="bing-card" id="bingVerification">
+              <div class="bing-card__header">
+                <h3>Microsoft/Bing Verification</h3>
+                <p class="helper-text small">Checks for msvalidate tags, IndexNow keys, llms.txt, and Bingbot access.</p>
+              </div>
+              <ul class="bing-checks-list" id="bingChecksList">
+                <li class="helper-text small">Run an analysis to view verification status.</li>
+              </ul>
+            </section>
+
+            <div class="benchmarks" id="benchmarkComparison">
+              <h3>Industry Benchmark</h3>
+              <div class="benchmark-cards">
+                <div class="benchmark-card">
+                  <p>SEO vs Avg</p>
+                  <p class="benchmark-value" id="seoBenchmark"></p>
+                  <p class="benchmark-label" id="seoBenchmarkLabel"></p>
+                </div>
+                <div class="benchmark-card">
+                  <p>GEO vs Avg</p>
+                  <p class="benchmark-value" id="geoBenchmark"></p>
+                  <p class="benchmark-label" id="geoBenchmarkLabel"></p>
+                </div>
+              </div>
             </div>
-          </div>
-          <ul class="recommendation-list" id="recommendationList"></ul>
-        </div>
 
-        <div class="type-specific" id="typeSpecificFindings">
-          <h3>Content Type-Specific Findings</h3>
-          <ul></ul>
-        </div>
+            <div class="recommendations">
+              <div class="recommendations__header">
+                <h3>Recommendations</h3>
+                <div class="chip-group" data-field="recommendation-view">
+                  <button class="chip chip--active" data-value="combined">Combined</button>
+                  <button class="chip" data-value="seo">SEO</button>
+                  <button class="chip" data-value="geo">GEO</button>
+                </div>
+              </div>
+              <ul class="recommendation-list" id="recommendationList"></ul>
+            </div>
 
-        <div class="analysis-log">
-          <h3>Analysis Snapshot</h3>
-          <div class="snapshot-grid" id="analysisSnapshot">
-            <p class="helper-text small">Run an analysis to view real metrics, schema detection, tone insights, and more.</p>
+            <div class="type-specific" id="typeSpecificFindings">
+              <h3>Content Type-Specific Findings</h3>
+              <ul></ul>
+            </div>
+
+            <div class="analysis-log">
+              <h3>Analysis Snapshot</h3>
+              <div class="snapshot-grid" id="analysisSnapshot">
+                <p class="helper-text small">Run an analysis to view real metrics, schema detection, tone insights, and more.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

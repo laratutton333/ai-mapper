@@ -231,6 +231,32 @@ textarea {
   margin-bottom: 0.35rem;
 }
 
+.results-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.results-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.results-column--secondary {
+  gap: 1.25rem;
+}
+
+@media (min-width: 1280px) {
+  .results-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+}
+
 .scores-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
