@@ -22,6 +22,10 @@ const elements = {
   contentType: document.getElementById('contentType'),
   industry: document.getElementById('industrySelect'),
   statusBanner: document.getElementById('statusBanner'),
+  stickyHeader: document.getElementById('stickyHeader'),
+  stickySeoScore: document.getElementById('stickySeoScore'),
+  stickyGeoScore: document.getElementById('stickyGeoScore'),
+  stickyAnalyzeBtn: document.getElementById('stickyAnalyzeBtn'),
   analyzeBtn: document.getElementById('analyzeBtn'),
   resetBtn: document.getElementById('resetBtn'),
   exportBtn: document.getElementById('exportBtn'),
@@ -44,6 +48,8 @@ const elements = {
   performanceScore: document.getElementById('performanceScoreValue'),
   performanceGrid: document.getElementById('performanceGrid'),
   bingChecks: document.getElementById('bingChecksList'),
+  inputPanel: document.querySelector('.input-panel'),
+  resultsPanel: document.querySelector('.results-panel'),
 };
 const heroJumpButtons = document.querySelectorAll('[data-jump]');
 const subscriptionModal = document.getElementById('subscriptionModal');
@@ -87,6 +93,8 @@ subscriptionModal?.addEventListener('click', (event) => {
 });
 
 toggleInputFields(state.inputType);
+initStickyHeader();
+updateStickyScores('--', '--');
 
 function initChipGroup(fieldName, callback) {
   const group = document.querySelector(`.chip-group[data-field="${fieldName}"]`);
@@ -115,6 +123,47 @@ function showStatus(message = '', variant = 'info') {
   }
   elements.statusBanner.textContent = message;
   elements.statusBanner.className = `status-banner status-banner--${variant}`;
+}
+
+function initStickyHeader() {
+  if (!elements.stickyHeader) return;
+  elements.stickyAnalyzeBtn?.addEventListener('click', () => {
+    if (!elements.stickyAnalyzeBtn.disabled) {
+      handleAnalyze();
+    }
+  });
+
+  const computeThreshold = () => {
+    if (!elements.inputPanel) return 300;
+    const rect = elements.inputPanel.getBoundingClientRect();
+    return rect.top + window.scrollY + elements.inputPanel.offsetHeight;
+  };
+
+  let stickyThreshold = computeThreshold();
+  const evaluateSticky = () => {
+    if (!elements.stickyHeader) return;
+    const show = window.scrollY > stickyThreshold;
+    elements.stickyHeader.classList.toggle('sticky-header--visible', show);
+  };
+
+  window.addEventListener(
+    'scroll',
+    () => {
+      evaluateSticky();
+    },
+    { passive: true }
+  );
+  window.addEventListener('resize', () => {
+    stickyThreshold = computeThreshold();
+    evaluateSticky();
+  });
+  evaluateSticky();
+}
+
+function updateStickyScores(seoScore, geoScore) {
+  if (!elements.stickySeoScore || !elements.stickyGeoScore) return;
+  elements.stickySeoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
+  elements.stickyGeoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
 }
 
 /* ANALYSIS ----------------------------------------------------------------- */
@@ -172,6 +221,10 @@ async function handleAnalyze() {
 function setAnalysisState(isRunning) {
   elements.analyzeBtn.disabled = isRunning;
   elements.analyzeBtn.textContent = isRunning ? 'Analyzing…' : 'Run AI Mapper Analysis';
+  if (elements.stickyAnalyzeBtn) {
+    elements.stickyAnalyzeBtn.disabled = isRunning;
+    elements.stickyAnalyzeBtn.textContent = isRunning ? 'Analyzing…' : 'Run AI Mapper Analysis';
+  }
   if (loadingOverlay) {
     loadingOverlay.classList.toggle('loading-overlay--visible', isRunning);
     loadingOverlay?.setAttribute('aria-hidden', isRunning ? 'false' : 'true');
@@ -564,6 +617,7 @@ function renderResults(result) {
   } = result;
   elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
   elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
+  updateStickyScores(seoScore, geoScore);
 
   const gap = Math.abs(seoScore - geoScore);
   elements.gapScore.textContent = `${gap}`;
@@ -1139,6 +1193,7 @@ function resetForm() {
   elements.textInput.value = '';
   updateSnapshot('Form reset. Add content and run analysis.');
   showStatus('', 'info');
+  updateStickyScores('--', '--');
   state.lastResult = null;
   if (elements.seoPillars) elements.seoPillars.innerHTML = '';
   if (elements.geoPillars) elements.geoPillars.innerHTML = '';

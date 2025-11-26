@@ -116,6 +116,19 @@
           </button>
         </div>
         <div id="statusBanner" class="status-banner hidden" role="status" aria-live="polite"></div>
+        <div id="stickyHeader" class="sticky-header" aria-live="polite">
+          <div class="sticky-header__scores">
+            <div class="sticky-score">
+              <p class="sticky-score__label">SEO</p>
+              <p class="sticky-score__value" id="stickySeoScore">--</p>
+            </div>
+            <div class="sticky-score">
+              <p class="sticky-score__label">GEO</p>
+              <p class="sticky-score__value" id="stickyGeoScore">--</p>
+            </div>
+          </div>
+          <button id="stickyAnalyzeBtn" class="cta sticky-header__cta" type="button">Run AI Mapper Analysis</button>
+        </div>
 
         <div class="results-layout">
           <div class="results-column results-column--primary">
