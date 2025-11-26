@@ -748,19 +748,21 @@ textarea {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.25rem;
+  align-items: start;
 }
 
 .pillar-card {
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  padding: 1.25rem;
-  background: var(--card-bg);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  background: var(--card-bg);
+  padding: 1.25rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-height: 220px;
+  max-width: 100%;
+  overflow: hidden;
   gap: 1.25rem;
-  min-height: 260px;
-  position: relative;
 }
 
 .pillar-card__header {
@@ -771,7 +773,7 @@ textarea {
 }
 
 .pillar-card__header h3 {
-  margin: 0;
+  margin: 0 0 0.5rem;
   font-size: 1.1rem;
 }
 
@@ -782,16 +784,19 @@ textarea {
   position: relative;
 }
 
-.pillar-card__score {
+.pillar-card__score,
+.pillar-card .pillar-score {
   font-size: clamp(2.25rem, 3vw, 3rem);
   font-weight: 700;
-  margin: 0;
+  margin: 0 0 0.75rem;
 }
 
-.pillar-card__summary {
-  margin: 0;
+.pillar-card__summary,
+.pillar-card .pillar-summary {
+  margin: 0 0 1rem;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  opacity: 0.75;
 }
 
 .pillar-card__score-wrap {
@@ -817,7 +822,8 @@ textarea {
   color: #fdba74;
 }
 
-.details-pill {
+.details-pill,
+.view-details-button {
   border: 1px solid rgba(226, 232, 240, 0.25);
   border-radius: 999px;
   padding: 0.25rem 0.9rem;
@@ -830,10 +836,25 @@ textarea {
 }
 
 .details-pill:hover,
-.details-pill:focus-visible {
+.view-details-button:hover,
+.details-pill:focus-visible,
+.view-details-button:focus-visible {
   border-color: rgba(226, 232, 240, 0.6);
   background: rgba(148, 163, 184, 0.1);
   outline: none;
+}
+
+.view-details-button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.pillar-card .details-preview {
+  flex: 0 0 auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .status-tooltip {
@@ -1395,4 +1416,8 @@ textarea {
 
 .recommendation-group__title {
   margin: 0 0 0.35rem;
+}
+.breakdown-section {
+  overflow: visible;
+  position: relative;
 }

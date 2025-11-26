@@ -825,10 +825,10 @@ function renderPillarSection(container, list = []) {
     const scoreWrap = document.createElement('div');
     scoreWrap.className = 'pillar-card__score-wrap';
     const scoreValue = document.createElement('p');
-    scoreValue.className = 'pillar-card__score';
+    scoreValue.className = 'pillar-card__score pillar-score';
     scoreValue.textContent = Number.isFinite(pillar.score) ? `${Math.round(pillar.score)}` : '--';
     const summary = document.createElement('p');
-    summary.className = 'pillar-card__summary';
+    summary.className = 'pillar-card__summary pillar-summary details-preview';
     summary.textContent = pillar.description;
     scoreWrap.append(scoreValue, summary);
 
