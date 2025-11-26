@@ -13,6 +13,7 @@ const state = {
   lastResult: null,
   activeDetailsId: null,
   activeDetailsTrigger: null,
+  analysisState: 'idle',
 };
 
 const COLLAPSE_DESKTOP_BREAKPOINT = 1280;
@@ -66,6 +67,7 @@ const elements = {
   resultsPanel: document.querySelector('.results-panel'),
   emptyState: document.getElementById('empty-state'),
   resultsContainer: document.getElementById('results-container'),
+  loadingSpinner: document.getElementById('loadingSpinner'),
   detailsPanel: document.getElementById('details-panel'),
   detailsBackdrop: document.getElementById('details-backdrop'),
   detailsPanelTitle: document.getElementById('detailsPanelTitle'),
@@ -128,7 +130,7 @@ initStickyHeader();
 initCollapsibleControls();
 initDetailsPanel();
 updateStickyScores('--', '--');
-setResultsVisibility(false);
+setAnalysisState('idle');
 setExportVisibility(false);
 applyIcons();
 
@@ -249,14 +251,8 @@ function initDetailsPanel() {
 }
 
 function setResultsVisibility(hasResults) {
-  if (!elements.resultsContainer || !elements.emptyState) return;
-  if (hasResults) {
-    elements.resultsContainer.classList.add('results-container--visible');
-    elements.emptyState.classList.add('hidden');
-  } else {
-    elements.resultsContainer.classList.remove('results-container--visible');
-    elements.emptyState.classList.remove('hidden');
-  }
+  if (!elements.resultsContainer) return;
+  elements.resultsContainer.classList.toggle('results-container--visible', Boolean(hasResults));
 }
 
 function setExportVisibility(visible) {
@@ -285,10 +281,9 @@ async function handleAnalyze() {
     analysisMode: state.mode,
   };
 
+  setAnalysisState('loading');
+  setSkeletonVisibility(true);
   try {
-    setAnalysisState(true);
-    setResultsVisibility(true);
-    setSkeletonVisibility(true);
     const payload = buildAnalysisPayload(ctx);
     const fetched = await runAnalysis(payload);
     const html = fetched.html ?? '';
@@ -311,6 +306,7 @@ async function handleAnalyze() {
 
     state.lastResult = result;
     renderResults(result);
+    setAnalysisState('done');
     showStatus('Analysis complete. Review the cards below for insights.', 'success');
   } catch (error) {
     console.error(error);
@@ -324,29 +320,47 @@ async function handleAnalyze() {
       showStatus(friendly, 'error');
       updateSnapshot(`Unable to analyze content.\nReason: ${friendly}`);
     }
+    setAnalysisState(state.lastResult ? 'done' : 'idle');
     if (!state.lastResult) {
-      setResultsVisibility(false);
       setExportVisibility(false);
     }
   } finally {
-    setAnalysisState(false);
     setSkeletonVisibility(false);
   }
 }
 
-function setAnalysisState(isRunning) {
-  elements.analyzeBtn.disabled = isRunning;
-  elements.analyzeBtn.textContent = isRunning ? 'Analyzing…' : 'Run AI Mapper Analysis';
+// --- FIX: spinner state logic ---
+function setAnalysisState(nextState = 'idle') {
+  state.analysisState = nextState;
+  const isLoading = nextState === 'loading';
+  const hasResults = Boolean(state.lastResult);
+  const shouldShowResults = hasResults && (nextState === 'loading' || nextState === 'done');
+  const shouldShowEmpty = !hasResults && nextState !== 'loading';
+
+  elements.analyzeBtn.disabled = isLoading;
+  elements.analyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Run AI Mapper Analysis';
   if (elements.stickyAnalyzeBtn) {
-    elements.stickyAnalyzeBtn.disabled = isRunning;
-    elements.stickyAnalyzeBtn.textContent = isRunning ? 'Analyzing…' : 'Run AI Mapper Analysis';
+    elements.stickyAnalyzeBtn.disabled = isLoading;
+    elements.stickyAnalyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Run AI Mapper Analysis';
+    elements.stickyAnalyzeBtn.classList.toggle('hidden', hasResults);
+  }
+  if (elements.loadingSpinner) {
+    elements.loadingSpinner.classList.toggle('hidden', !isLoading);
   }
   if (loadingOverlay) {
-    loadingOverlay.classList.toggle('loading-overlay--visible', isRunning);
-    loadingOverlay?.setAttribute('aria-hidden', isRunning ? 'false' : 'true');
+    loadingOverlay.classList.toggle('loading-overlay--visible', isLoading);
+    loadingOverlay?.setAttribute('aria-hidden', isLoading ? 'false' : 'true');
   }
-  if (isRunning) {
+  setResultsVisibility(shouldShowResults);
+  if (elements.emptyState) {
+    elements.emptyState.classList.toggle('hidden', !shouldShowEmpty);
+  }
+  if (elements.stickyHeader) {
+    elements.stickyHeader.classList.toggle('header--analysis-active', hasResults);
+  }
+  if (nextState === 'loading') {
     showStatus('Analyzing content…', 'info');
+    closeDetailsPanel({ silent: true });
   }
 }
 
@@ -753,7 +767,6 @@ function renderResults(result) {
   renderMicrosoftChecks(microsoftBingChecks);
   updateBenchmarks(result);
   renderSnapshotTable(result);
-  setResultsVisibility(true);
   updateStatusBadge(elements.seoStatusBadge, classifyScore(seoScore));
   updateStatusBadge(elements.geoStatusBadge, classifyScore(geoScore));
   applyIcons(elements.resultsContainer);
@@ -796,7 +809,7 @@ function renderPillarSection(container, list = []) {
     statusWrapper.className = 'pillar-card__status';
 
     const badge = document.createElement('span');
-    badge.className = `chip chip--status ${status.className}`.trim();
+    badge.className = `status-pill ${getStatusClass(status.label)}`;
     badge.textContent = status.label;
     badge.tabIndex = 0;
     badge.setAttribute('role', 'status');
@@ -865,15 +878,8 @@ function setupStatusTooltip(badge, tooltip) {
 
 function updateStatusBadge(element, status) {
   if (!element || !status) return;
-  element.textContent = status.label;
-  element.className = 'status-pill';
-  if (status.className === 'challenged') {
-    element.classList.add('status-pill--warn');
-  } else if (status.className === 'risk') {
-    element.classList.add('status-pill--fail');
-  } else {
-    element.classList.add('status-pill--pass');
-  }
+  element.textContent = status.label ?? '--';
+  element.className = `status-pill ${getStatusClass(status.label)}`;
 }
 
 function handleDetailsTriggerEvent(event) {
@@ -1051,18 +1057,20 @@ function renderSnapshotTable(result) {
   `;
 }
 
+// --- FIX: Speed Snapshot binding ---
 function renderPerformance(performance) {
   if (!elements.performanceGrid || !elements.performanceScore) return;
-  if (!performance) {
+  const data = performance ?? state.lastResult?.performance ?? null;
+  if (!data) {
     elements.performanceScore.textContent = '--';
     elements.performanceGrid.innerHTML =
       '<p class="empty-copy">URL fetching is required to display performance metrics.</p>';
     return;
   }
 
-  const scoreText = Number.isFinite(performance.performanceScore) ? `${performance.performanceScore}` : '--';
+  const scoreText = Number.isFinite(data.performanceScore) ? `${data.performanceScore}` : '--';
   elements.performanceScore.textContent = scoreText;
-  const grades = performance.grades ?? {};
+  const grades = data.grades ?? {};
   const gradeClass = {
     optimal: 'grade-badge--optimal',
     acceptable: 'grade-badge--acceptable',
@@ -1072,22 +1080,22 @@ function renderPerformance(performance) {
   const metricRows = [
     {
       label: 'Response time (ms)',
-      value: `${performance.responseTimeMs}`,
+      value: Number.isFinite(data.responseTimeMs) ? `${data.responseTimeMs}` : 'n/a',
       grade: grades.responseTime ?? 'acceptable',
     },
     {
       label: 'Page size (KB)',
-      value: `${formatBytesToKB(performance.pageSizeBytes)} KB`,
+      value: `${formatBytesToKB(data.pageSizeBytes)} KB`,
       grade: grades.pageSize ?? 'acceptable',
     },
     {
       label: 'Number of requests',
-      value: `${performance.numRequests}`,
+      value: Number.isFinite(data.numRequests) ? `${data.numRequests}` : 'n/a',
       grade: grades.numRequests ?? 'acceptable',
     },
     {
       label: 'Largest image (KB)',
-      value: `${formatBytesToKB(performance.largestImageBytes)} KB`,
+      value: `${formatBytesToKB(data.largestImageBytes)} KB`,
       grade: grades.largestImage ?? 'acceptable',
     },
   ];
@@ -1444,25 +1452,33 @@ function formatBingChecksForExport(checks) {
 }
 
 function classifyScore(score) {
-  if (score >= 80) {
+  const value = Number.isFinite(score) ? score : 0;
+  if (value >= 80) {
     return {
       label: 'Strong',
-      className: '',
-      message: 'Signals meet or exceed GEO expectations. Keep reinforcing this pillar.',
+      message: 'Signals are healthy with solid coverage across evaluated pillars.',
     };
   }
-  if (score >= 60) {
+  if (value >= 60) {
     return {
       label: 'Watch',
-      className: 'challenged',
       message: 'Mixed execution. Address highlighted checks before the gap widens.',
     };
   }
   return {
     label: 'Risk',
-    className: 'risk',
     message: 'Critical deficiencies reduce discoverability. Prioritize fixes immediately.',
   };
+}
+
+// --- FIX: status badge colours ---
+function getStatusClass(label = '') {
+  const mapping = {
+    Strong: 'status-strong',
+    Watch: 'status-watch',
+    Risk: 'status-risk',
+  };
+  return mapping[label] ?? 'status-neutral';
 }
 
 function resetForm() {
@@ -1473,6 +1489,8 @@ function resetForm() {
   updateSnapshot('Form reset. Add content and run analysis.');
   showStatus('', 'info');
   updateStickyScores('--', '--');
+  updateStatusBadge(elements.seoStatusBadge, { label: null });
+  updateStatusBadge(elements.geoStatusBadge, { label: null });
   state.lastResult = null;
   if (elements.seoPillars) elements.seoPillars.innerHTML = '';
   if (elements.geoPillars) elements.geoPillars.innerHTML = '';
@@ -1490,7 +1508,7 @@ function resetForm() {
   if (elements.geoBreakdownScore) elements.geoBreakdownScore.textContent = '--';
   renderPerformance(null);
   renderMicrosoftChecks(null);
-  setResultsVisibility(false);
+  setAnalysisState('idle');
   setExportVisibility(false);
 }
 
