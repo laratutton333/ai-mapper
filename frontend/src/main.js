@@ -162,16 +162,18 @@ function stopLoading() {
   elements.loadingSpinner?.classList.add('hidden');
 }
 
-const statusClasses = {
-  risk: 'status-risk',
-  strong: 'status-strong',
-  watch: 'status-watch',
-};
-
-const statusNormalize = (value = '') => value.toLowerCase().trim();
-
-function getStatusClass(label = '') {
-  return statusClasses[statusNormalize(label)] ?? 'status-neutral';
+function getStatusClass(status) {
+  if (!status) return 'status-neutral';
+  switch (status.toLowerCase().trim()) {
+    case 'strong':
+      return 'status-strong';
+    case 'watch':
+      return 'status-watch';
+    case 'risk':
+      return 'status-risk';
+    default:
+      return 'status-neutral';
+  }
 }
 
 function showStatus(message = '', variant = 'info') {
@@ -1504,16 +1506,6 @@ function classifyScore(score) {
     label: 'Risk',
     message: 'Critical deficiencies reduce discoverability. Prioritize fixes immediately.',
   };
-}
-
-// --- FIX: status badge colours ---
-function getStatusClass(label = '') {
-  const mapping = {
-    Strong: 'status-strong',
-    Watch: 'status-watch',
-    Risk: 'status-risk',
-  };
-  return mapping[label] ?? 'status-neutral';
 }
 
 function resetForm() {

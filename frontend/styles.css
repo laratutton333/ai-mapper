@@ -623,7 +623,7 @@ textarea {
 }
 
 /* --- FIX: grid spacing cleanup --- */
- .card-grid {
+.card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 24px;
