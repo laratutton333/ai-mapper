@@ -773,11 +773,9 @@ function renderResults(result) {
     geoPillars,
     microsoftBingChecks,
   } = result;
-  if (state.analysisState === 'done') {
-    elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
-    elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
-    updateStickyScores(seoScore, geoScore);
-  }
+  elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
+  elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
+  updateStickyScores(seoScore, geoScore);
 
   const gap = Math.abs(seoScore - geoScore);
   elements.gapScore.textContent = `${gap}`;
@@ -789,19 +787,17 @@ function renderResults(result) {
   }
   elements.gapNarrative.textContent = narrative;
 
-  if (state.analysisState === 'done') {
-    renderPillars(seoPillars, geoPillars, seoScore, geoScore);
-    renderRecommendations(recommendations);
-    renderTypeSpecific(typeFindings);
-    if (result.performance) {
-      renderPerformance(result.performance);
-    }
-    renderMicrosoftChecks(microsoftBingChecks);
-    updateBenchmarks(result);
-    renderSnapshotTable(result);
-    updateStatusBadge(elements.seoStatusBadge, classifyScore(seoScore));
-    updateStatusBadge(elements.geoStatusBadge, classifyScore(geoScore));
+  renderPillars(seoPillars, geoPillars, seoScore, geoScore);
+  renderRecommendations(recommendations);
+  renderTypeSpecific(typeFindings);
+  if (result.performance) {
+    renderPerformance(result.performance);
   }
+  renderMicrosoftChecks(microsoftBingChecks);
+  updateBenchmarks(result);
+  renderSnapshotTable(result);
+  updateStatusBadge(elements.seoStatusBadge, classifyScore(seoScore));
+  updateStatusBadge(elements.geoStatusBadge, classifyScore(geoScore));
   applyIcons(elements.resultsContainer);
   setExportVisibility(true);
   setSkeletonVisibility(false);
