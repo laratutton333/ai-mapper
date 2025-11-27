@@ -367,8 +367,10 @@ async function handleAnalyze() {
       ...fetchedResult,
       ...workerResult,
     };
-    combined.seoPillars = buildSeoPillars(fetchedResult.seoBreakdown ?? {});
-    combined.geoPillars = buildGeoPillars(fetchedResult.geoBreakdown ?? {});
+    combined.seoBreakdown = fetchedResult.seoBreakdown ?? [];
+    combined.geoBreakdown = fetchedResult.geoBreakdown ?? [];
+    combined.seoPillars = buildSeoPillars(combined.seoBreakdown);
+    combined.geoPillars = buildGeoPillars(combined.geoBreakdown);
     state.lastResult = combined;
     setAnalysisState('done');
     renderResults(combined);
