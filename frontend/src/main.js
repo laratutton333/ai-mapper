@@ -102,7 +102,7 @@ initChipGroup('mode-toggle', (value) => {
 
 initChipGroup('recommendation-view', (value) => {
   state.recommendationView = value;
-  if (state.lastResult) {
+  if (state.lastResult && state.analysisState === 'done') {
     renderRecommendations(state.lastResult.recommendations);
   }
 });
@@ -352,22 +352,22 @@ async function handleAnalyze() {
       showStatus(friendly, 'error');
       updateSnapshot(`Unable to analyze content.\nReason: ${friendly}`);
     }
-    setAnalysisState(state.lastResult ? 'done' : 'idle');
+    setAnalysisState('error');
     if (!state.lastResult) {
       setExportVisibility(false);
     }
   } finally {
     setSkeletonVisibility(false);
-    renderPerformance(state.lastResult?.performance ?? fetchedResult?.performance ?? null);
   }
 }
 
 function setAnalysisState(nextState = 'idle') {
   state.analysisState = nextState;
   const isLoading = nextState === 'loading';
-  const hasResults = Boolean(state.lastResult);
-  const shouldShowResults = hasResults && (nextState === 'loading' || nextState === 'done');
-  const shouldShowEmpty = !hasResults && nextState !== 'loading';
+  const isDone = nextState === 'done';
+  const isIdle = nextState === 'idle';
+  const shouldShowResults = nextState === 'done';
+  const shouldShowEmpty = isIdle;
 
   elements.analyzeBtn.disabled = isLoading;
   elements.analyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Run AI Mapper Analysis';
@@ -375,9 +375,12 @@ function setAnalysisState(nextState = 'idle') {
     elements.stickyAnalyzeBtn.disabled = isLoading;
     elements.stickyAnalyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Run AI Mapper Analysis';
   }
+  elements.emptyState?.classList.toggle('hidden', !shouldShowEmpty);
+  setResultsVisibility(shouldShowResults);
   if (isLoading) {
     startLoading();
-    elements.emptyState?.classList.add('hidden');
+    showStatus('Analyzing content…', 'info');
+    closeDetailsPanel({ silent: true });
   } else {
     stopLoading();
   }
@@ -385,15 +388,7 @@ function setAnalysisState(nextState = 'idle') {
     loadingOverlay.classList.toggle('loading-overlay--visible', isLoading);
     loadingOverlay?.setAttribute('aria-hidden', isLoading ? 'false' : 'true');
   }
-  setResultsVisibility(shouldShowResults);
-  if (elements.emptyState) {
-    elements.emptyState.classList.toggle('hidden', !shouldShowEmpty);
-  }
-  updateStickyHeader(hasResults, state.drawerOpen);
-  if (nextState === 'loading') {
-    showStatus('Analyzing content…', 'info');
-    closeDetailsPanel({ silent: true });
-  }
+  updateStickyHeader(isDone ? Boolean(state.lastResult) : false, state.drawerOpen);
 }
 
 function buildAnalysisPayload(ctx) {
@@ -778,9 +773,11 @@ function renderResults(result) {
     geoPillars,
     microsoftBingChecks,
   } = result;
-  elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
-  elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
-  updateStickyScores(seoScore, geoScore);
+  if (state.analysisState === 'done') {
+    elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
+    elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
+    updateStickyScores(seoScore, geoScore);
+  }
 
   const gap = Math.abs(seoScore - geoScore);
   elements.gapScore.textContent = `${gap}`;
@@ -792,15 +789,19 @@ function renderResults(result) {
   }
   elements.gapNarrative.textContent = narrative;
 
-  renderPillars(seoPillars, geoPillars, seoScore, geoScore);
-  renderRecommendations(recommendations);
-  renderTypeSpecific(typeFindings);
-  renderPerformance(performance);
-  renderMicrosoftChecks(microsoftBingChecks);
-  updateBenchmarks(result);
-  renderSnapshotTable(result);
-  updateStatusBadge(elements.seoStatusBadge, classifyScore(seoScore));
-  updateStatusBadge(elements.geoStatusBadge, classifyScore(geoScore));
+  if (state.analysisState === 'done') {
+    renderPillars(seoPillars, geoPillars, seoScore, geoScore);
+    renderRecommendations(recommendations);
+    renderTypeSpecific(typeFindings);
+    if (result.performance) {
+      renderPerformance(result.performance);
+    }
+    renderMicrosoftChecks(microsoftBingChecks);
+    updateBenchmarks(result);
+    renderSnapshotTable(result);
+    updateStatusBadge(elements.seoStatusBadge, classifyScore(seoScore));
+    updateStatusBadge(elements.geoStatusBadge, classifyScore(geoScore));
+  }
   applyIcons(elements.resultsContainer);
   setExportVisibility(true);
   setSkeletonVisibility(false);
