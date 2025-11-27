@@ -35,7 +35,9 @@ function runAnalysisWorker(payload) {
 
     analysisWorker.addEventListener('message', handleMessage, { once: true });
     analysisWorker.addEventListener('error', handleError, { once: true });
-    analysisWorker.postMessage(payload);
+    const transferablePayload =
+      typeof structuredClone === 'function' ? structuredClone(payload) : JSON.parse(JSON.stringify(payload));
+    analysisWorker.postMessage(transferablePayload);
   });
 }
 
@@ -352,7 +354,6 @@ async function handleAnalyze() {
       htmlClean: html?.trim() ?? '',
       structuralMetrics,
       performance: fetchedResult.performance ?? null,
-      backendMetrics: fetchedResult.metrics ?? null,
       settings: {
         inputType: ctx.inputType,
         url: ctx.url,
@@ -366,8 +367,7 @@ async function handleAnalyze() {
       geoBreakdown: fetchedResult.geoBreakdown ?? {},
       microsoftBingChecks: fetchedResult.microsoftBingChecks ?? null,
     };
-    const cloneablePayload = JSON.parse(JSON.stringify(workerPayload));
-    const workerResult = await runAnalysisWorker(cloneablePayload);
+    const workerResult = await runAnalysisWorker(workerPayload);
     if (workerResult?.error) {
       throw new Error(workerResult.error);
     }

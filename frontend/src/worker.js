@@ -22,8 +22,19 @@ self.onmessage = (event) => {
     });
     const performanceNormalized = normalizePerformance(result.performance ?? payload.performance ?? null);
     self.postMessage({
-      ...result,
+      seoScore: result.seoScore,
+      geoScore: result.geoScore,
+      seoBreakdown: result.seoBreakdown,
+      geoBreakdown: result.geoBreakdown,
+      pillars: result.pillars,
+      recommendations: result.recommendations,
+      typeFindings: result.typeFindings,
       performanceNormalized,
+      metrics: result.metrics,
+      performance: result.performance,
+      snapshot: result.snapshot,
+      microsoftBingChecks: result.microsoftBingChecks,
+      meta: result.meta,
     });
   } catch (error) {
     self.postMessage({ error: error?.message || 'Failed to process analysis payload.' });
@@ -39,7 +50,6 @@ function analyzeContent({
   industry,
   analysisMode,
   performance,
-  backendMetrics,
   seoScore,
   geoScore,
   seoBreakdown,
@@ -48,7 +58,7 @@ function analyzeContent({
 }) {
   const textStats = computeTextStats(text);
   const structural = structuralMetrics ?? {};
-  const metrics = { ...textStats, ...structural, ...(backendMetrics ?? {}) };
+  const metrics = { ...textStats, ...structural };
   if (metrics.hasDataTable) {
     metrics.topicalAuthorityScore = Math.min(100, metrics.topicalAuthorityScore + 10);
   }
