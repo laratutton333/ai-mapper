@@ -337,8 +337,8 @@ async function handleAnalyze() {
     });
 
     state.lastResult = result;
-    renderResults(result);
     setAnalysisState('done');
+    renderResults(result);
     showStatus('Analysis complete. Review the cards below for insights.', 'success');
   } catch (error) {
     console.error(error);
