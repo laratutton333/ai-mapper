@@ -367,6 +367,14 @@ async function handleAnalyze() {
       ...fetchedResult,
       ...workerResult,
     };
+    combined.meta = {
+      ...(fetchedResult.meta ?? {}),
+      industry: ctx.industry,
+      inputType: ctx.inputType,
+      url: ctx.url,
+      contentType: ctx.contentType,
+      analysisMode: ctx.analysisMode,
+    };
     combined.seoBreakdown = fetchedResult.seoBreakdown ?? [];
     combined.geoBreakdown = fetchedResult.geoBreakdown ?? [];
     combined.seoPillars = buildSeoPillars(combined.seoBreakdown);
@@ -971,7 +979,8 @@ function renderMicrosoftChecks(checks) {
 }
 
 function updateBenchmarks(result) {
-  const industry = INDUSTRY_BENCHMARKS[result.meta.industry];
+  const industryKey = result.meta?.industry;
+  const industry = industryKey ? INDUSTRY_BENCHMARKS[industryKey] : null;
   if (!industry) {
     elements.seoBenchmark.textContent = '--';
     elements.geoBenchmark.textContent = '--';
