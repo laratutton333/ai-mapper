@@ -314,23 +314,24 @@ async function handleAnalyze() {
 
   setAnalysisState('loading');
   setSkeletonVisibility(true);
+  let fetchedResult = null;
   try {
     const payload = buildAnalysisPayload(ctx);
-    const fetched = await runAnalysis(payload);
-    const html = fetched.html ?? '';
+    fetchedResult = await runAnalysis(payload);
+    const html = fetchedResult.html ?? '';
     if (!html) throw new Error('Analysis returned no HTML. Please try another input.');
     const text = htmlToText(html);
 
     const result = analyzeContent({
       html,
       text,
-      performance: fetched.performance ?? null,
-      backendMetrics: fetched.metrics ?? null,
-      seoScore: fetched.seoScore,
-      geoScore: fetched.geoScore,
-      seoBreakdown: fetched.seoBreakdown ?? {},
-      geoBreakdown: fetched.geoBreakdown ?? {},
-      microsoftBingChecks: fetched.microsoftBingChecks ?? null,
+      performance: fetchedResult.performance ?? null,
+      backendMetrics: fetchedResult.metrics ?? null,
+      seoScore: fetchedResult.seoScore,
+      geoScore: fetchedResult.geoScore,
+      seoBreakdown: fetchedResult.seoBreakdown ?? {},
+      geoBreakdown: fetchedResult.geoBreakdown ?? {},
+      microsoftBingChecks: fetchedResult.microsoftBingChecks ?? null,
       analysisMode: ctx.analysisMode,
       ...ctx,
     });
@@ -357,6 +358,7 @@ async function handleAnalyze() {
     }
   } finally {
     setSkeletonVisibility(false);
+    renderPerformance(state.lastResult?.performance ?? fetchedResult?.performance ?? null);
   }
 }
 
@@ -1093,21 +1095,19 @@ function renderSnapshotTable(result) {
 
 // --- FIX: Speed Snapshot binding ---
 function renderPerformance(performance) {
-  if (!elements.performanceGrid || !elements.performanceScore) return;
-  const data = performance ?? state.lastResult?.performance ?? null;
+  if (!elements.performanceScore) return;
+  const payload = performance ?? state.lastResult?.performance ?? null;
+  const data = normalizePerformance(payload);
   if (!data) {
     elements.performanceScore.textContent = '--';
-    elements.performanceGrid.innerHTML =
-      '<p class="empty-copy">URL fetching is required to display performance metrics.</p>';
+    const grid = ensurePerformanceGrid();
+    if (grid) {
+      grid.innerHTML = '<p class="empty-copy">URL fetching is required to display performance metrics.</p>';
+    }
     return;
   }
 
-  const safeValue = (v, transform) => {
-    if (v === null || v === undefined || v === '') return '--';
-    return transform ? transform(v) : v;
-  };
-
-  const scoreText = safeValue(data.performanceScore);
+  const scoreText = data.performanceScore !== null ? `${data.performanceScore}` : '--';
   elements.performanceScore.textContent = scoreText;
   const grades = data.grades ?? {};
   const gradeClass = {
@@ -1119,22 +1119,22 @@ function renderPerformance(performance) {
   const metricRows = [
     {
       label: 'Response time (ms)',
-      value: safeValue(data.responseTime ?? data.responseTimeMs),
+      value: data.responseTime ?? '--',
       grade: grades.responseTime ?? 'acceptable',
     },
     {
       label: 'Page size (KB)',
-      value: safeValue(data.pageSizeKB ?? formatBytesToKB(data.pageSizeBytes), (value) => `${value} KB`),
+      value: data.pageSizeKB !== null ? `${data.pageSizeKB} KB` : '--',
       grade: grades.pageSize ?? 'acceptable',
     },
     {
       label: 'Number of requests',
-      value: safeValue(data.numRequests ?? data.requests),
+      value: data.numRequests ?? '--',
       grade: grades.numRequests ?? 'acceptable',
     },
     {
       label: 'Largest image (KB)',
-      value: safeValue(data.largestImageKB ?? formatBytesToKB(data.largestImageBytes), (value) => `${value} KB`),
+      value: data.largestImageKB !== null ? `${data.largestImageKB} KB` : '--',
       grade: grades.largestImage ?? 'acceptable',
     },
   ];
@@ -1150,7 +1150,57 @@ function renderPerformance(performance) {
     )
     .join('');
 
-  elements.performanceGrid.innerHTML = template;
+  const grid = ensurePerformanceGrid();
+  if (grid) {
+    grid.innerHTML = template;
+  }
+}
+
+function normalizePerformance(performance = {}) {
+  if (!performance) return null;
+  const toNumber = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+  const normalized = {
+    performanceScore: toNumber(performance.performanceScore),
+    responseTime: toNumber(performance.responseTime ?? performance.responseTimeMs),
+    pageSizeKB: toNumber(performance.pageSizeKB ?? formatBytesToKB(performance.pageSizeBytes)),
+    numRequests: toNumber(performance.numRequests ?? performance.requests),
+    largestImageKB: toNumber(performance.largestImageKB ?? formatBytesToKB(performance.largestImageBytes)),
+    grades: performance.grades ?? {},
+  };
+  if (
+    normalized.performanceScore === null &&
+    normalized.responseTime === null &&
+    normalized.pageSizeKB === null &&
+    normalized.numRequests === null &&
+    normalized.largestImageKB === null
+  ) {
+    return null;
+  }
+  return normalized;
+}
+
+function ensurePerformanceGrid() {
+  if (elements.performanceGrid) {
+    elements.performanceGrid.classList.remove('hidden');
+    return elements.performanceGrid;
+  }
+  const section = document.getElementById('performancePanel');
+  if (!section) return null;
+  section.classList.remove('hidden');
+  let grid = section.querySelector('.performance-grid');
+  if (!grid) {
+    grid = document.createElement('div');
+    grid.className = 'performance-grid';
+    grid.id = 'performanceGrid';
+    section.appendChild(grid);
+  }
+  grid.classList.remove('hidden');
+  elements.performanceGrid = grid;
+  return grid;
 }
 
 function renderMicrosoftChecks(checks) {
@@ -1432,8 +1482,9 @@ function scoreProprietarySignals(text) {
 }
 
 function formatBytesToKB(bytes = 0) {
-  if (!Number.isFinite(bytes) || bytes <= 0) return 0;
-  const kb = bytes / 1024;
+  const numeric = Number(bytes);
+  if (!Number.isFinite(numeric) || numeric <= 0) return 0;
+  const kb = numeric / 1024;
   return kb >= 100 ? Math.round(kb) : Number(kb.toFixed(1));
 }
 
@@ -1532,10 +1583,10 @@ function resetForm() {
   elements.seoBenchmark.textContent = '--';
   elements.geoBenchmark.textContent = '--';
   elements.seoBenchmarkLabel.textContent = '';
-  elements.geoBenchmarkLabel.textContent = '';
-  if (elements.seoBreakdownScore) elements.seoBreakdownScore.textContent = '--';
-  if (elements.geoBreakdownScore) elements.geoBreakdownScore.textContent = '--';
-  renderPerformance(null);
+    elements.geoBenchmarkLabel.textContent = '';
+    if (elements.seoBreakdownScore) elements.seoBreakdownScore.textContent = '--';
+    if (elements.geoBreakdownScore) elements.geoBreakdownScore.textContent = '--';
+    renderPerformance(null);
   renderMicrosoftChecks(null);
   elements.emptyState?.classList.remove('hidden');
   setAnalysisState('idle');
