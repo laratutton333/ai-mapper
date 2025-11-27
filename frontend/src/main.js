@@ -761,6 +761,7 @@ function inferOwnedDomain(url = '', doc) {
 
 /* RENDERING ---------------------------------------------------------------- */
 function renderResults(result) {
+  if (state.analysisState !== 'done') return;
   closeDetailsPanel({ silent: true });
   const {
     seoScore,
