@@ -366,7 +366,8 @@ async function handleAnalyze() {
       geoBreakdown: fetchedResult.geoBreakdown ?? {},
       microsoftBingChecks: fetchedResult.microsoftBingChecks ?? null,
     };
-    const workerResult = await runAnalysisWorker(workerPayload);
+    const cloneablePayload = JSON.parse(JSON.stringify(workerPayload));
+    const workerResult = await runAnalysisWorker(cloneablePayload);
     if (workerResult?.error) {
       throw new Error(workerResult.error);
     }
