@@ -341,10 +341,16 @@ async function handleAnalyze() {
     const payload = buildAnalysisPayload(ctx);
     fetchedResult = await runAnalysis(payload);
     const html = fetchedResult.html ?? '';
-    if (!html) throw new Error('Analysis returned no HTML. Please try another input.');
+    if (!html && ctx.inputType !== 'text') {
+      throw new Error('Analysis returned no HTML. Please try another input.');
+    }
+    const derivedText =
+      ctx.inputType === 'text' ? elements.textInput.value.trim() : htmlToText(html);
+    const structuralMetrics = analyzeStructure(html, ctx.inputType, ctx.url);
     const workerPayload = {
-      html,
-      text: ctx.inputType === 'text' ? elements.textInput.value.trim() : '',
+      text: derivedText,
+      htmlClean: html?.trim() ?? '',
+      structuralMetrics,
       performance: fetchedResult.performance ?? null,
       backendMetrics: fetchedResult.metrics ?? null,
       settings: {
@@ -1009,7 +1015,147 @@ function hideSubscriptionModal() {
   subscriptionModal?.classList.remove('modal--visible');
 }
 
+/* DOM-DEPENDENT HELPERS ---------------------------------------------------- */
+function analyzeStructure(html = '', inputType, url = '') {
+  if (!html) {
+    return {
+      schemaTypes: [],
+      hasViewport: inputType === 'text' ? false : true,
+      isHttps: url.startsWith('https'),
+      pageSpeedEstimate: inputType === 'text' ? 70 : 80,
+      titleLength: 0,
+      metaLength: 0,
+      headerScore: 60,
+      keywordInIntro: true,
+      linkCount: 0,
+      listCoverage: 0,
+      hasFaqSchema: false,
+      hasProductSchema: false,
+      hasDataTable: false,
+      dataTableCount: 0,
+      likelyOwnedDomain: inferOwnedDomain(url),
+    };
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const schemaTypes = extractSchemaTypes(doc);
+  const hasViewport = Boolean(doc.querySelector('meta[name="viewport"]'));
+  const isHttps = url ? url.startsWith('https://') : true;
+  const titleLength = (doc.querySelector('title')?.textContent ?? '').trim().length;
+  const metaLength = (doc.querySelector('meta[name="description"]')?.getAttribute('content') ?? '').trim().length;
+  const headers = [...doc.querySelectorAll('h1, h2, h3, h4, h5, h6')];
+  const headerScore = headers.length ? Math.min(100, headers.length * 15) : 40;
+  const linkCount = doc.querySelectorAll('a[href]').length;
+  const listCoverage = doc.querySelectorAll('ul, ol').length;
+  const imageCount = doc.querySelectorAll('img').length;
+  const textContent = htmlToText(html);
+  const dominantKeyword = extractDominantKeyword(textContent);
+  const intro = textContent.split(/\s+/).slice(0, 100).join(' ').toLowerCase();
+  const keywordInIntro = dominantKeyword ? intro.includes(dominantKeyword) : true;
+  const pageSpeedEstimate = Math.max(55, 95 - imageCount * 3 - doc.querySelectorAll('script').length * 2);
+  const dataTableCount = doc.querySelectorAll('table').length;
+
+  return {
+    schemaTypes,
+    hasViewport,
+    isHttps,
+    pageSpeedEstimate,
+    titleLength,
+    metaLength,
+    headerScore,
+    keywordInIntro,
+    linkCount,
+    listCoverage,
+    dominantKeyword,
+    hasFaqSchema: schemaTypes.includes('FAQPage'),
+    hasProductSchema: schemaTypes.includes('Product'),
+    hasDataTable: dataTableCount > 0,
+    dataTableCount,
+    likelyOwnedDomain: inferOwnedDomain(url, doc),
+  };
+}
+
+function inferOwnedDomain(url = '', doc) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    const path = parsed.pathname.toLowerCase();
+    const newsroomHints = ['news', 'press', 'media', 'newsroom', 'mediaroom', 'investor'];
+    if (newsroomHints.some((hint) => hostname.includes(hint) || path.includes(hint))) {
+      return true;
+    }
+    const siteName = doc?.querySelector('meta[property="og:site_name"]')?.getAttribute('content') ?? '';
+    if (siteName) {
+      const sanitized = siteName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (sanitized && hostname.includes(sanitized)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 /* UTILITIES ---------------------------------------------------------------- */
+function htmlToText(html) {
+  if (!html) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc.body?.textContent ?? '';
+}
+
+function extractSchemaTypes(doc) {
+  const types = new Set();
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach((script) => {
+    try {
+      const data = JSON.parse(script.textContent);
+      if (Array.isArray(data)) {
+        data.forEach((entry) => collectSchemaType(entry, types));
+      } else {
+        collectSchemaType(data, types);
+      }
+    } catch {
+      // ignore malformed JSON-LD
+    }
+  });
+
+  doc.querySelectorAll('[itemscope][itemtype]').forEach((node) => {
+    types.add(node.getAttribute('itemtype')?.split('/').pop() ?? '');
+  });
+
+  const htmlString = doc.documentElement.outerHTML;
+  ['FAQPage', 'NewsArticle', 'Product', 'HowTo', 'Article'].forEach((key) => {
+    if (htmlString.includes(key)) types.add(key);
+  });
+
+  return Array.from(types).filter(Boolean);
+}
+
+function collectSchemaType(entry, set) {
+  if (!entry) return;
+  const type = entry['@type'];
+  if (Array.isArray(type)) {
+    type.forEach((value) => set.add(value));
+  } else if (typeof type === 'string') {
+    set.add(type);
+  }
+}
+
+function extractDominantKeyword(text) {
+  const tokens = text
+    .toLowerCase()
+    .match(/\b[a-z]{4,}\b/g);
+  if (!tokens) return '';
+  const stopWords = new Set(['with', 'this', 'that', 'from', 'have', 'will', 'about', 'your', 'their', 'news', 'homepage']);
+  const counts = {};
+  tokens.forEach((word) => {
+    if (stopWords.has(word)) return;
+    counts[word] = (counts[word] || 0) + 1;
+  });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+}
+
 function formatBytesToKB(bytes = 0) {
   const numeric = Number(bytes);
   if (!Number.isFinite(numeric) || numeric <= 0) return 0;
