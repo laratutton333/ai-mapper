@@ -119,15 +119,17 @@
 
           <div id="statusBanner" class="status-banner hidden" role="status" aria-live="polite"></div>
 
-          <div id="empty-state" class="empty-state-card card" aria-live="polite">
-            <span data-icon="sparkles" data-label="Awaiting analysis" class="empty-state__icon"></span>
-            <p class="empty-state__title">
-              Run an analysis to view SEO + GEO breakdowns, verification checks, and insights.
-            </p>
+          <div id="emptyState">
+            <div id="empty-state" class="empty-state-card card" aria-live="polite">
+              <span data-icon="sparkles" data-label="Awaiting analysis" class="empty-state__icon"></span>
+              <p class="empty-state__title">
+                Run an analysis to view SEO + GEO breakdowns, verification checks, and insights.
+              </p>
+            </div>
           </div>
 
           <div id="results-container" class="results-container">
-            <div id="stickyHeader" class="sticky-header" aria-live="polite">
+            <div id="stickyHeader" class="sticky-header hidden" aria-live="polite">
               <div class="sticky-header__scores">
                 <div class="sticky-score">
                   <p class="sticky-score__label label-with-icon">
@@ -220,7 +222,7 @@
                 <span class="collapsible-caret" aria-hidden="true"></span>
               </button>
               <div class="collapsible-panel collapsible-panel--open" id="seoPillarsPanel">
-                <div class="card-grid pillar-grid" id="seoPillars"></div>
+                <div class="pillar-card-grid" id="seoPillars"></div>
                 <div class="pillar-skeleton" id="seoPillarsSkeleton">
                   <div class="skeleton skeleton-card"></div>
                   <div class="skeleton skeleton-card"></div>
@@ -241,7 +243,7 @@
                 <span class="collapsible-caret" aria-hidden="true"></span>
               </button>
               <div class="collapsible-panel collapsible-panel--open" id="geoPillarsPanel">
-                <div class="card-grid pillar-grid" id="geoPillars"></div>
+                <div class="pillar-card-grid" id="geoPillars"></div>
                 <div class="pillar-skeleton" id="geoPillarsSkeleton">
                   <div class="skeleton skeleton-card"></div>
                   <div class="skeleton skeleton-card"></div>

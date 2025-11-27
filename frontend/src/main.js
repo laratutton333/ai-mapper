@@ -14,6 +14,7 @@ const state = {
   activeDetailsId: null,
   activeDetailsTrigger: null,
   analysisState: 'idle',
+  drawerOpen: false,
 };
 
 const COLLAPSE_DESKTOP_BREAKPOINT = 1280;
@@ -65,7 +66,7 @@ const elements = {
   bingChecks: document.getElementById('bingChecksList'),
   inputPanel: document.querySelector('.input-panel'),
   resultsPanel: document.querySelector('.results-panel'),
-  emptyState: document.getElementById('empty-state'),
+  emptyState: document.getElementById('emptyState'),
   resultsContainer: document.getElementById('results-container'),
   loadingSpinner: document.getElementById('loadingSpinner'),
   detailsPanel: document.getElementById('details-panel'),
@@ -150,6 +151,27 @@ function toggleInputFields(type) {
   elements.urlField.classList.toggle('hidden', type !== 'url');
   elements.htmlField.classList.toggle('hidden', type !== 'html');
   elements.textField.classList.toggle('hidden', type !== 'text');
+}
+
+// --- FIX: spinner state logic ---
+function startLoading() {
+  elements.loadingSpinner?.classList.remove('hidden');
+}
+
+function stopLoading() {
+  elements.loadingSpinner?.classList.add('hidden');
+}
+
+const statusClasses = {
+  risk: 'status-risk',
+  strong: 'status-strong',
+  watch: 'status-watch',
+};
+
+const statusNormalize = (value = '') => value.toLowerCase().trim();
+
+function getStatusClass(label = '') {
+  return statusClasses[statusNormalize(label)] ?? 'status-neutral';
 }
 
 function showStatus(message = '', variant = 'info') {
@@ -255,6 +277,13 @@ function setResultsVisibility(hasResults) {
   elements.resultsContainer.classList.toggle('results-container--visible', Boolean(hasResults));
 }
 
+// --- FIX: sticky header CTA ---
+function updateStickyHeader(hasResults, drawerOpen = false) {
+  if (!elements.stickyHeader) return;
+  const show = hasResults && !drawerOpen && state.analysisState === 'done';
+  elements.stickyHeader.classList.toggle('hidden', !show);
+}
+
 function setExportVisibility(visible) {
   if (!elements.exportBtn) return;
   elements.exportBtn.classList.toggle('hidden', !visible);
@@ -282,6 +311,7 @@ async function handleAnalyze() {
   };
 
   setAnalysisState('loading');
+  startLoading();
   setSkeletonVisibility(true);
   try {
     const payload = buildAnalysisPayload(ctx);
@@ -306,7 +336,9 @@ async function handleAnalyze() {
 
     state.lastResult = result;
     renderResults(result);
+    elements.emptyState?.classList.add('hidden');
     setAnalysisState('done');
+    stopLoading();
     showStatus('Analysis complete. Review the cards below for insights.', 'success');
   } catch (error) {
     console.error(error);
@@ -321,6 +353,7 @@ async function handleAnalyze() {
       updateSnapshot(`Unable to analyze content.\nReason: ${friendly}`);
     }
     setAnalysisState(state.lastResult ? 'done' : 'idle');
+    stopLoading();
     if (!state.lastResult) {
       setExportVisibility(false);
     }
@@ -329,7 +362,6 @@ async function handleAnalyze() {
   }
 }
 
-// --- FIX: spinner state logic ---
 function setAnalysisState(nextState = 'idle') {
   state.analysisState = nextState;
   const isLoading = nextState === 'loading';
@@ -342,10 +374,6 @@ function setAnalysisState(nextState = 'idle') {
   if (elements.stickyAnalyzeBtn) {
     elements.stickyAnalyzeBtn.disabled = isLoading;
     elements.stickyAnalyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Run AI Mapper Analysis';
-    elements.stickyAnalyzeBtn.classList.toggle('hidden', hasResults);
-  }
-  if (elements.loadingSpinner) {
-    elements.loadingSpinner.classList.toggle('hidden', !isLoading);
   }
   if (loadingOverlay) {
     loadingOverlay.classList.toggle('loading-overlay--visible', isLoading);
@@ -355,9 +383,7 @@ function setAnalysisState(nextState = 'idle') {
   if (elements.emptyState) {
     elements.emptyState.classList.toggle('hidden', !shouldShowEmpty);
   }
-  if (elements.stickyHeader) {
-    elements.stickyHeader.classList.toggle('header--analysis-active', hasResults);
-  }
+  updateStickyHeader(hasResults, state.drawerOpen);
   if (nextState === 'loading') {
     showStatus('Analyzing content…', 'info');
     closeDetailsPanel({ silent: true });
@@ -908,6 +934,8 @@ function openDetailsPanel(detailsId, title, summary, trigger) {
   elements.detailsPanel.focus();
   state.activeDetailsId = detailsId;
   state.activeDetailsTrigger = trigger ?? null;
+  state.drawerOpen = true;
+  updateStickyHeader(Boolean(state.lastResult), true);
   if (trigger) {
     trigger.setAttribute('aria-expanded', 'true');
   }
@@ -931,6 +959,8 @@ function closeDetailsPanel(options = {}) {
   }
   state.activeDetailsId = null;
   state.activeDetailsTrigger = null;
+  state.drawerOpen = false;
+  updateStickyHeader(Boolean(state.lastResult), false);
 }
 
 function renderRecommendations(recommendations) {
@@ -1068,7 +1098,12 @@ function renderPerformance(performance) {
     return;
   }
 
-  const scoreText = Number.isFinite(data.performanceScore) ? `${data.performanceScore}` : '--';
+  const safeValue = (v, transform) => {
+    if (v === null || v === undefined || v === '') return '--';
+    return transform ? transform(v) : v;
+  };
+
+  const scoreText = safeValue(data.performanceScore);
   elements.performanceScore.textContent = scoreText;
   const grades = data.grades ?? {};
   const gradeClass = {
@@ -1080,22 +1115,22 @@ function renderPerformance(performance) {
   const metricRows = [
     {
       label: 'Response time (ms)',
-      value: Number.isFinite(data.responseTimeMs) ? `${data.responseTimeMs}` : 'n/a',
+      value: safeValue(data.responseTimeMs),
       grade: grades.responseTime ?? 'acceptable',
     },
     {
       label: 'Page size (KB)',
-      value: `${formatBytesToKB(data.pageSizeBytes)} KB`,
+      value: safeValue(formatBytesToKB(data.pageSizeBytes), (value) => `${value} KB`),
       grade: grades.pageSize ?? 'acceptable',
     },
     {
       label: 'Number of requests',
-      value: Number.isFinite(data.numRequests) ? `${data.numRequests}` : 'n/a',
+      value: safeValue(data.numRequests),
       grade: grades.numRequests ?? 'acceptable',
     },
     {
       label: 'Largest image (KB)',
-      value: `${formatBytesToKB(data.largestImageBytes)} KB`,
+      value: safeValue(formatBytesToKB(data.largestImageBytes), (value) => `${value} KB`),
       grade: grades.largestImage ?? 'acceptable',
     },
   ];
@@ -1508,7 +1543,9 @@ function resetForm() {
   if (elements.geoBreakdownScore) elements.geoBreakdownScore.textContent = '--';
   renderPerformance(null);
   renderMicrosoftChecks(null);
+  elements.emptyState?.classList.remove('hidden');
   setAnalysisState('idle');
+  stopLoading();
   setExportVisibility(false);
 }
 
