@@ -10,31 +10,12 @@ self.onmessage = (event) => {
       inputType: settings.inputType ?? 'url',
       url: settings.url ?? '',
       contentType: settings.contentType ?? 'General',
-      industry: settings.industry ?? 'general',
-      analysisMode: settings.analysisMode ?? 'dual',
       performance: payload.performance ?? null,
-      backendMetrics: payload.backendMetrics ?? null,
-      seoScore: payload.seoScore,
-      geoScore: payload.geoScore,
-      seoBreakdown: payload.seoBreakdown ?? {},
-      geoBreakdown: payload.geoBreakdown ?? {},
-      microsoftBingChecks: payload.microsoftBingChecks ?? null,
     });
-    const performanceNormalized = normalizePerformance(result.performance ?? payload.performance ?? null);
+    const performanceNormalized = normalizePerformance(payload.performance ?? null);
     self.postMessage({
-      seoScore: result.seoScore,
-      geoScore: result.geoScore,
-      seoBreakdown: result.seoBreakdown,
-      geoBreakdown: result.geoBreakdown,
-      pillars: result.pillars,
-      recommendations: result.recommendations,
-      typeFindings: result.typeFindings,
+      ...result,
       performanceNormalized,
-      metrics: result.metrics,
-      performance: result.performance,
-      snapshot: result.snapshot,
-      microsoftBingChecks: result.microsoftBingChecks,
-      meta: result.meta,
     });
   } catch (error) {
     self.postMessage({ error: error?.message || 'Failed to process analysis payload.' });
@@ -47,14 +28,7 @@ function analyzeContent({
   inputType,
   url,
   contentType,
-  industry,
-  analysisMode,
   performance,
-  seoScore,
-  geoScore,
-  seoBreakdown,
-  geoBreakdown,
-  microsoftBingChecks,
 }) {
   const textStats = computeTextStats(text);
   const structural = structuralMetrics ?? {};
@@ -67,15 +41,6 @@ function analyzeContent({
     metrics.factsPer100 >= 8 ||
     metrics.proprietarySignalScore >= 5;
 
-  const seo = {
-    total: Number.isFinite(seoScore) ? Number(seoScore) : 0,
-    breakdown: seoBreakdown ?? {},
-  };
-  const geo = {
-    total: Number.isFinite(geoScore) ? Number(geoScore) : 0,
-    breakdown: geoBreakdown ?? {},
-  };
-
   const recommendations = buildRecommendations(metrics, { contentType });
   const typeFindings = getTypeSpecificFindings(contentType, metrics);
 
@@ -87,25 +52,12 @@ function analyzeContent({
     performance,
   });
 
-  const seoPillars = buildSeoPillars(seo.breakdown);
-  const geoPillars = buildGeoPillars(geo.breakdown);
-  const pillars = [...seoPillars, ...geoPillars];
-
   return {
-    seoScore: seo.total,
-    geoScore: geo.total,
-    pillars,
-    seoPillars,
-    geoPillars,
+    textStats,
+    structuralMetrics: structural,
     recommendations,
     typeFindings,
     snapshot,
-    metrics,
-    performance,
-    seoBreakdown: seo.breakdown,
-    geoBreakdown: geo.breakdown,
-    microsoftBingChecks,
-    meta: { inputType, url, contentType, industry, analysisMode },
   };
 }
 
@@ -210,107 +162,6 @@ function evaluateRule(conditionId, metrics = {}, ctx = {}) {
     default:
       return true;
   }
-}
-
-const SEO_PILLAR_META = {
-  technical: {
-    id: 'technical',
-    label: 'Technical SEO',
-    description: 'Title/meta coverage, canonical hygiene, and baseline crawl signals.',
-    maxPoints: 30,
-  },
-  content: {
-    id: 'contentQuality',
-    label: 'Content Quality',
-    description: 'Keyword placement, internal linking, schema, and topical coverage.',
-    maxPoints: 35,
-  },
-  readability: {
-    id: 'readability',
-    label: 'Readability',
-    description: 'Sentence + paragraph length with scannable formatting.',
-    maxPoints: 30,
-  },
-};
-
-const GEO_PILLAR_META = {
-  structuredData: {
-    id: 'structuredData',
-    label: 'Structured Data',
-    description: 'Schema alignment, breadcrumbs, and entity relationships.',
-    maxPoints: 20,
-  },
-  contentClarity: {
-    id: 'contentClarity',
-    label: 'Content Structure & Clarity',
-    description: 'Headings, TL;DR coverage, Q&A blocks, and chunked paragraphs.',
-    maxPoints: 20,
-  },
-  entityArchitecture: {
-    id: 'entityArchitecture',
-    label: 'Entity Architecture',
-    description: 'Internal linking, anchors, and clean URL structures.',
-    maxPoints: 15,
-  },
-  technicalGeo: {
-    id: 'technicalGeo',
-    label: 'Technical GEO & Indexability',
-    description: 'llms.txt, IndexNow, robots directives, and SSR/lightweight HTML.',
-    maxPoints: 20,
-  },
-  authoritySignals: {
-    id: 'authoritySignals',
-    label: 'Authority & Source Signals',
-    description: 'Author schema, bios, citations, and first-party signals.',
-    maxPoints: 15,
-  },
-  freshness: {
-    id: 'freshness',
-    label: 'Freshness',
-    description: 'Recent updates and current content references.',
-    maxPoints: 5,
-  },
-  safety: {
-    id: 'safety',
-    label: 'Safety & Consistency',
-    description: 'Disclaimers, clarity, and absence of contradictions.',
-    maxPoints: 5,
-  },
-};
-
-function buildSeoPillars(breakdown = {}) {
-  return buildPillarsFromBreakdown(breakdown, SEO_PILLAR_META);
-}
-
-function buildGeoPillars(breakdown = {}) {
-  return buildPillarsFromBreakdown(breakdown, GEO_PILLAR_META);
-}
-
-function buildPillarsFromBreakdown(breakdown = {}, categoryMeta = {}) {
-  const categories = {};
-  Object.values(breakdown).forEach((entry) => {
-    const meta = categoryMeta[entry.category];
-    if (!meta) return;
-    if (!categories[entry.category]) {
-      categories[entry.category] = { points: 0, max: 0, notes: [] };
-    }
-    categories[entry.category].points += entry.points ?? 0;
-    categories[entry.category].max += entry.maxPoints ?? 0;
-    categories[entry.category].notes.push(`${entry.label}: ${entry.points}/${entry.maxPoints}`);
-  });
-
-  return Object.entries(categoryMeta).map(([key, meta]) => {
-    const data = categories[key] ?? { points: 0, max: meta.maxPoints ?? 0, notes: [] };
-    const maxPoints = data.max || meta.maxPoints || 1;
-    const score = Math.round((data.points / maxPoints) * 100);
-    return {
-      id: meta.id,
-      label: meta.label,
-      description: meta.description,
-      score,
-      notes: data.notes.length ? data.notes : ['No checks evaluated.'],
-    };
-  });
 }
 
 function computeTextStats(text = '') {

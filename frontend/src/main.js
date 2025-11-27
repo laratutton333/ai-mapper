@@ -351,29 +351,27 @@ async function handleAnalyze() {
     const structuralMetrics = analyzeStructure(html, ctx.inputType, ctx.url);
     const workerPayload = {
       text: derivedText,
-      htmlClean: html?.trim() ?? '',
       structuralMetrics,
       performance: fetchedResult.performance ?? null,
       settings: {
         inputType: ctx.inputType,
         url: ctx.url,
         contentType: ctx.contentType,
-        industry: ctx.industry,
-        analysisMode: ctx.analysisMode,
       },
-      seoScore: fetchedResult.seoScore,
-      geoScore: fetchedResult.geoScore,
-      seoBreakdown: fetchedResult.seoBreakdown ?? {},
-      geoBreakdown: fetchedResult.geoBreakdown ?? {},
-      microsoftBingChecks: fetchedResult.microsoftBingChecks ?? null,
     };
     const workerResult = await runAnalysisWorker(workerPayload);
     if (workerResult?.error) {
       throw new Error(workerResult.error);
     }
-    state.lastResult = workerResult;
+    const combined = {
+      ...fetchedResult,
+      ...workerResult,
+    };
+    combined.seoPillars = buildSeoPillars(fetchedResult.seoBreakdown ?? {});
+    combined.geoPillars = buildGeoPillars(fetchedResult.geoBreakdown ?? {});
+    state.lastResult = combined;
     setAnalysisState('done');
-    renderResults(workerResult);
+    renderResults(combined);
     showStatus('Analysis complete. Review the cards below for insights.', 'success');
   } catch (error) {
     console.error(error);
@@ -502,10 +500,9 @@ function renderResults(result) {
     metrics,
     performance,
     performanceNormalized,
-    seoPillars,
-    geoPillars,
     microsoftBingChecks,
   } = result;
+  const { seoPillars = [], geoPillars = [] } = result;
   elements.seoScore.textContent = Number.isFinite(seoScore) ? `${seoScore}` : '--';
   elements.geoScore.textContent = Number.isFinite(geoScore) ? `${geoScore}` : '--';
   updateStickyScores(seoScore, geoScore);
@@ -1344,4 +1341,104 @@ ${result.typeFindings.map((text) => `<li>${text}</li>`).join('\n')}
   anchor.download = 'ai-mapper-report.html';
   anchor.click();
   URL.revokeObjectURL(href);
+}
+const SEO_PILLAR_META = {
+  technical: {
+    id: 'technical',
+    label: 'Technical SEO',
+    description: 'Title/meta coverage, canonical hygiene, and baseline crawl signals.',
+    maxPoints: 30,
+  },
+  content: {
+    id: 'contentQuality',
+    label: 'Content Quality',
+    description: 'Keyword placement, internal linking, schema, and topical coverage.',
+    maxPoints: 35,
+  },
+  readability: {
+    id: 'readability',
+    label: 'Readability',
+    description: 'Sentence + paragraph length with scannable formatting.',
+    maxPoints: 30,
+  },
+};
+
+const GEO_PILLAR_META = {
+  structuredData: {
+    id: 'structuredData',
+    label: 'Structured Data',
+    description: 'Schema alignment, breadcrumbs, and entity relationships.',
+    maxPoints: 20,
+  },
+  contentClarity: {
+    id: 'contentClarity',
+    label: 'Content Structure & Clarity',
+    description: 'Headings, TL;DR coverage, Q&A blocks, and chunked paragraphs.',
+    maxPoints: 20,
+  },
+  entityArchitecture: {
+    id: 'entityArchitecture',
+    label: 'Entity Architecture',
+    description: 'Internal linking, anchors, and clean URL structures.',
+    maxPoints: 15,
+  },
+  technicalGeo: {
+    id: 'technicalGeo',
+    label: 'Technical GEO & Indexability',
+    description: 'llms.txt, IndexNow, robots directives, and SSR/lightweight HTML.',
+    maxPoints: 20,
+  },
+  authoritySignals: {
+    id: 'authoritySignals',
+    label: 'Authority & Source Signals',
+    description: 'Author schema, bios, citations, and first-party signals.',
+    maxPoints: 15,
+  },
+  freshness: {
+    id: 'freshness',
+    label: 'Freshness',
+    description: 'Recent updates and current content references.',
+    maxPoints: 5,
+  },
+  safety: {
+    id: 'safety',
+    label: 'Safety & Consistency',
+    description: 'Disclaimers, clarity, and absence of contradictions.',
+    maxPoints: 5,
+  },
+};
+
+function buildSeoPillars(breakdown = {}) {
+  return buildPillarsFromBreakdown(breakdown, SEO_PILLAR_META);
+}
+
+function buildGeoPillars(breakdown = {}) {
+  return buildPillarsFromBreakdown(breakdown, GEO_PILLAR_META);
+}
+
+function buildPillarsFromBreakdown(breakdown = {}, categoryMeta = {}) {
+  const categories = {};
+  Object.values(breakdown).forEach((entry) => {
+    const meta = categoryMeta[entry.category];
+    if (!meta) return;
+    if (!categories[entry.category]) {
+      categories[entry.category] = { points: 0, max: 0, notes: [] };
+    }
+    categories[entry.category].points += entry.points ?? 0;
+    categories[entry.category].max += entry.maxPoints ?? 0;
+    categories[entry.category].notes.push(`${entry.label}: ${entry.points}/${entry.maxPoints}`);
+  });
+
+  return Object.entries(categoryMeta).map(([key, meta]) => {
+    const data = categories[key] ?? { points: 0, max: meta.maxPoints ?? 0, notes: [] };
+    const maxPoints = data.max || meta.maxPoints || 1;
+    const score = Math.round((data.points / maxPoints) * 100);
+    return {
+      id: meta.id,
+      label: meta.label,
+      description: meta.description,
+      score,
+      notes: data.notes.length ? data.notes : ['No checks evaluated.'],
+    };
+  });
 }
