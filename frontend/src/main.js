@@ -1117,22 +1117,22 @@ function renderPerformance(performance) {
   const metricRows = [
     {
       label: 'Response time (ms)',
-      value: safeValue(data.responseTimeMs),
+      value: safeValue(data.responseTime ?? data.responseTimeMs),
       grade: grades.responseTime ?? 'acceptable',
     },
     {
       label: 'Page size (KB)',
-      value: safeValue(formatBytesToKB(data.pageSizeBytes), (value) => `${value} KB`),
+      value: safeValue(data.pageSizeKB ?? formatBytesToKB(data.pageSizeBytes), (value) => `${value} KB`),
       grade: grades.pageSize ?? 'acceptable',
     },
     {
       label: 'Number of requests',
-      value: safeValue(data.numRequests),
+      value: safeValue(data.numRequests ?? data.requests),
       grade: grades.numRequests ?? 'acceptable',
     },
     {
       label: 'Largest image (KB)',
-      value: safeValue(formatBytesToKB(data.largestImageBytes), (value) => `${value} KB`),
+      value: safeValue(data.largestImageKB ?? formatBytesToKB(data.largestImageBytes), (value) => `${value} KB`),
       grade: grades.largestImage ?? 'acceptable',
     },
   ];
