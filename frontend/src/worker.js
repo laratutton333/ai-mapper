@@ -1,4 +1,4 @@
-import { buildRecommendations, getTypeSpecificFindings } from './analysis/recommendations.js';
+import { GEO_RULES, SEO_RULES, TYPE_SPECIFIC_TIPS } from './analysis/recommendations.js';
 
 self.onmessage = (event) => {
   const payload = event.data || {};
@@ -32,7 +32,6 @@ self.onmessage = (event) => {
 
 function analyzeContent({
   text,
-  htmlClean = '',
   structuralMetrics = {},
   inputType,
   url,
@@ -68,8 +67,7 @@ function analyzeContent({
   };
 
   const recommendations = buildRecommendations(metrics, { contentType });
-  const typeFindingsRaw = getTypeSpecificFindings(contentType, metrics);
-  const typeFindings = typeFindingsRaw.filter(Boolean);
+  const typeFindings = getTypeSpecificFindings(contentType, metrics);
 
   const snapshot = buildSnapshot(metrics, {
     inputType,
@@ -99,6 +97,109 @@ function analyzeContent({
     microsoftBingChecks,
     meta: { inputType, url, contentType, industry, analysisMode },
   };
+}
+
+function buildRecommendations(metrics, ctx = {}) {
+  const seo = evaluateRuleSet(SEO_RULES, metrics, ctx, 'seo');
+  const geo = evaluateRuleSet(GEO_RULES, metrics, ctx, 'geo');
+  let combined = [...seo, ...geo].slice(0, 10);
+  if (!combined.length) {
+    combined = [
+      {
+        id: 'maintain',
+        text: 'Maintain current optimization approach — both SEO and GEO pillars score within benchmark range.',
+        priority: 'Maintain',
+        mode: 'combined',
+      },
+    ];
+  }
+
+  return {
+    combined,
+    seo: seo.length ? seo : combined.filter((item) => item.mode === 'seo'),
+    geo: geo.length ? geo : combined.filter((item) => item.mode === 'geo'),
+  };
+}
+
+function evaluateRuleSet(rules, metrics, ctx, mode) {
+  return rules
+    .filter((rule) => evaluateRule(rule.conditionId, metrics, ctx))
+    .map((rule) => ({
+      id: rule.id,
+      text: rule.text,
+      priority: rule.priority,
+      mode,
+    }));
+}
+
+function getTypeSpecificFindings(contentType, metrics = {}) {
+  const tips = TYPE_SPECIFIC_TIPS[contentType] ?? [];
+  return tips.filter((tip) => evaluateRule(tip.conditionId, metrics, { contentType })).map((tip) => tip.text);
+}
+
+function evaluateRule(conditionId, metrics = {}, ctx = {}) {
+  if (!conditionId) return true;
+  const schemaTypes = Array.isArray(metrics.schemaTypes) ? metrics.schemaTypes : [];
+  const contentType = ctx.contentType ?? '';
+  switch (conditionId) {
+    case 'schemaNews':
+      return contentType === 'pressRelease' && !schemaTypes.includes('NewsArticle');
+    case 'schemaFaq':
+      return ['blogArticle', 'productPage', 'howTo'].includes(contentType) && !schemaTypes.includes('FAQPage');
+    case 'productSchema':
+      return contentType === 'productPage' && !schemaTypes.includes('Product');
+    case 'titleLength':
+      return contentType !== 'pressRelease' && Number.isFinite(metrics.titleLength)
+        ? metrics.titleLength < 50 || metrics.titleLength > 60
+        : false;
+    case 'metaDescription':
+      return Number.isFinite(metrics.metaLength) ? metrics.metaLength < 140 || metrics.metaLength > 170 : false;
+    case 'keywordIntro':
+      return metrics.keywordInIntro === false;
+    case 'internalLinks':
+      return (Number(metrics.linkCount) || 0) < 3;
+    case 'pageSpeed': {
+      const threshold = contentType === 'pressRelease' ? 65 : 75;
+      return Number.isFinite(metrics.pageSpeedEstimate) ? metrics.pageSpeedEstimate < threshold : false;
+    }
+    case 'wordCount':
+      return (Number(metrics.wordCount) || 0) < 800;
+    case 'entityDefinitions':
+      return (Number(metrics.entityDefinitions) || 0) < 2;
+    case 'infoDensity':
+      return Number.isFinite(metrics.factsPer100) ? metrics.factsPer100 < 5 : false;
+    case 'qaFormat':
+      return contentType !== 'pressRelease' && (Number(metrics.qaCount) || 0) < 3;
+    case 'conversationalTone':
+      return contentType !== 'pressRelease' && (Number(metrics.conversationalMarkers) || 0) < 10;
+    case 'quotable':
+      return Number.isFinite(metrics.quotableStatementsRatio) ? metrics.quotableStatementsRatio < 0.4 : false;
+    case 'attribution': {
+      const min = contentType === 'pressRelease' ? 1 : 2;
+      return (Number(metrics.attributionCount) || 0) < min;
+    }
+    case 'voiceSearch':
+      return contentType !== 'pressRelease' && Number.isFinite(metrics.voicePatternScore)
+        ? metrics.voicePatternScore < 70
+        : false;
+    case 'parserStructure':
+      return Number.isFinite(metrics.parserAccessibilityScore) ? metrics.parserAccessibilityScore < 75 : false;
+    case 'authority': {
+      if (contentType === 'pressRelease') {
+        const attributionStrong = (Number(metrics.attributionCount) || 0) >= 1;
+        const proprietary = Boolean(metrics.hasProprietaryData);
+        const dense = Number.isFinite(metrics.factsPer100) && metrics.factsPer100 >= 8;
+        return !(attributionStrong || proprietary || dense);
+      }
+      return (Number(metrics.topicalAuthorityScore) || 0) < 55 && !metrics.hasProprietaryData;
+    }
+    case 'pressHostOwned':
+      return !metrics.likelyOwnedDomain;
+    case 'pressProprietary':
+      return !metrics.hasProprietaryData;
+    default:
+      return true;
+  }
 }
 
 const SEO_PILLAR_META = {
