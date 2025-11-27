@@ -313,7 +313,6 @@ async function handleAnalyze() {
   };
 
   setAnalysisState('loading');
-  startLoading();
   setSkeletonVisibility(true);
   try {
     const payload = buildAnalysisPayload(ctx);
@@ -338,9 +337,7 @@ async function handleAnalyze() {
 
     state.lastResult = result;
     renderResults(result);
-    elements.emptyState?.classList.add('hidden');
     setAnalysisState('done');
-    stopLoading();
     showStatus('Analysis complete. Review the cards below for insights.', 'success');
   } catch (error) {
     console.error(error);
@@ -355,7 +352,6 @@ async function handleAnalyze() {
       updateSnapshot(`Unable to analyze content.\nReason: ${friendly}`);
     }
     setAnalysisState(state.lastResult ? 'done' : 'idle');
-    stopLoading();
     if (!state.lastResult) {
       setExportVisibility(false);
     }
@@ -376,6 +372,12 @@ function setAnalysisState(nextState = 'idle') {
   if (elements.stickyAnalyzeBtn) {
     elements.stickyAnalyzeBtn.disabled = isLoading;
     elements.stickyAnalyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Run AI Mapper Analysis';
+  }
+  if (isLoading) {
+    startLoading();
+    elements.emptyState?.classList.add('hidden');
+  } else {
+    stopLoading();
   }
   if (loadingOverlay) {
     loadingOverlay.classList.toggle('loading-overlay--visible', isLoading);
